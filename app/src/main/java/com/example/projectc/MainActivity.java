@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -81,6 +82,9 @@ public class MainActivity extends AppCompatActivity {
                 };
                 Log.i("LoginData", "Here");
                 mOAuthLoginModule.startOauthLoginActivity(MainActivity.this, mOAuthLoginHandler);
+                Intent intent_change_disp = new Intent(MainActivity.this, MainActivity_display.class);
+                startActivity(intent_change_disp);
+
             }
         });
 
