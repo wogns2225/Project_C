@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 28
     buildToolsVersion "30.0.2"
 
     defaultConfig {
         applicationId "com.example.projectc"
         minSdkVersion 28
-        targetSdkVersion 30
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
@@ -26,7 +26,7 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-//    google map app 사용
+    // google map app 사용
     implementation'com.google.android.gms:play-services-maps:17.0.0'
     implementation'com.google.android.gms:play-services-location:17.1.0'
 
@@ -34,7 +34,10 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    //네이버 로그인
+    // 20.11.18, Snackbar를 사용
+    implementation 'com.google.android.material:material:1.3.0-alpha02'
+
+    // 네이버 로그인
     implementation 'com.naver.nid:naveridlogin-android-sdk:4.2.6'   // import from jcenter
 
     // naveridlogin dependencies
