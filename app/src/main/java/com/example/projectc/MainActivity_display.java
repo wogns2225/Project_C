@@ -73,6 +73,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     private View mLayout;  // Snackbar 사용하기 위해서는 View가 필요합니다.
     // (참고로 Toast에서는 Context가 필요했습니다.)
 
+    SocketMgr sock = new SocketMgr();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,6 +108,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         btn_send_msg = (Button) findViewById(R.id.button_msg);
         btn_send_position = (Button) findViewById(R.id.button_send_position);
 
+
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -119,23 +122,19 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public void onClick(View view) {
                 final String data = "test socket function";
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.i("MainActivity_display", "[send btn clicked]");
-                        SocketMgr sock = new SocketMgr();
-                        sock.send(data);
-                    }
-                }).start();
+                Log.i(TAG, "[send btn clicked]");
+                sock.send(data);
             }
         });
 
         btn_send_position.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.i(TAG, "[btn_send_position btn clicked]");
+                String jsonForPositionInfo;
                 PacketMgr pkt = new PacketMgr();
-                pkt.makePktPosition(0, 1, 1, mCurrentPosition);
+                jsonForPositionInfo = pkt.makePktPosition(0, 1, 1, mCurrentPosition);
+                sock.send(jsonForPositionInfo);
             }
         });
     }
@@ -195,7 +194,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 String markerSnippet = "Lat : " + location.getLatitude() +
                         "Long : " + location.getLongitude();
 
-                Log.d(TAG, "onLocationResult : " + markerSnippet);
+//                Log.d(TAG, "onLocationResult : " + markerSnippet);
 
                 setCurrentLocation(location, markerTitle, markerSnippet);
                 mCurrentLocation = location;
