@@ -10,7 +10,6 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -19,12 +18,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.projectc.commMgr.PacketMgr;
+import com.example.projectc.commMgr.SocketMgr;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -41,10 +41,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 import java.util.Locale;
 
@@ -100,12 +97,14 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mapFragment.getMapAsync(this);
         Log.d(TAG, "next from the map");
 
-//        socket test
+        /* socket test */
         Button btn_back;
         Button btn_send_msg;
+        Button btn_send_position;
 
         btn_back = (Button) findViewById(R.id.button_back);
         btn_send_msg = (Button) findViewById(R.id.button_msg);
+        btn_send_position = (Button) findViewById(R.id.button_send_position);
 
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,9 +124,18 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                     @Override
                     public void run() {
                         Log.i("MainActivity_display", "[send btn clicked]");
-                        send(data);
+                        SocketMgr sock = new SocketMgr();
+                        sock.send(data);
                     }
                 }).start();
+            }
+        });
+
+        btn_send_position.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PacketMgr pkt = new PacketMgr();
+                pkt.makePktPosition(0, 1, 1, mCurrentPosition);
             }
         });
     }
@@ -184,8 +192,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 mCurrentPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
                 String markerTitle = getCurrentAddress(mCurrentPosition);
-                String markerSnippet = "Lat : " + String.valueOf(location.getLatitude()) +
-                        "Long : " + String.valueOf(location.getLongitude());
+                String markerSnippet = "Lat : " + location.getLatitude() +
+                        "Long : " + location.getLongitude();
 
                 Log.d(TAG, "onLocationResult : " + markerSnippet);
 
@@ -214,7 +222,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             return "주소 미발견";
         }else{
             Address address = addresses.get(0);
-            return address.getAddressLine(0).toString();
+            return address.getAddressLine(0);
         }
     }
 
@@ -262,35 +270,6 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 
-//    socket test
-    public void send(String data){
-        String host_ip = "192.168.0.5";
-        int port = 20000;
-
-        try {
-            Socket sock = new Socket(host_ip, port);
-            Log.i("MainActivity_display","create socket ip : [" + host_ip + "] port : [" + port + "]");
-
-            DataOutputStream out_stream = new DataOutputStream(sock.getOutputStream());
-            out_stream.writeUTF(data);
-            out_stream.flush();
-            // out_stream.flush();
-            Log.i("MainActivity_display","send message : [" + data + "]");
-            byte[] bufRcv = new byte[1024];
-
-            DataInputStream inputStream = new DataInputStream(sock.getInputStream());
-            int rcv_size = inputStream.read(bufRcv);
-            String recv_str = new String(bufRcv, 0, rcv_size);
-
-            Log.i("MainActivity_display","read data for received size : ["+ rcv_size + "], recv_str :[" + recv_str + "]");
-            System.out.println("println str : " + recv_str);
-
-            sock.close();
-        }catch (Exception e){
-            e.getMessage();
-        }
-    }
-
     public void setDefaultLocation(LatLng default_Location){
         String marker_Title = "위치정보를 가져올 수 없음.";
         String marker_Snippet = " 위치 퍼미션과 GPS 활성 여부 확인하세요";
@@ -318,11 +297,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         int hasFineLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         int hasCoarseLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
 
-        if(hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
-               hasFineLocationPermission == PackageManager.PERMISSION_GRANTED  ){
-            return true;
-        }
-        return false;
+        return hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
+                hasFineLocationPermission == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
