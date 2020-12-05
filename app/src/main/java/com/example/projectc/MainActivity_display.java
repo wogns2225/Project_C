@@ -104,9 +104,9 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         Button btn_send_msg;
         Button btn_send_position;
 
-        btn_back = (Button) findViewById(R.id.button_back);
-        btn_send_msg = (Button) findViewById(R.id.button_msg);
-        btn_send_position = (Button) findViewById(R.id.button_send_position);
+        btn_back = findViewById(R.id.button_back);
+        btn_send_msg = findViewById(R.id.button_msg);
+        btn_send_position = findViewById(R.id.button_send_position);
 
 
         btn_back.setOnClickListener(new View.OnClickListener() {
@@ -133,7 +133,10 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 Log.i(TAG, "[btn_send_position btn clicked]");
                 String jsonForPositionInfo;
                 PacketMgr pkt = new PacketMgr();
-                jsonForPositionInfo = pkt.makePktPosition(0, 1, 1, mCurrentPosition);
+                String macAdd = MainActivity.getMACAddress("wlan0");
+                String aaa = macAdd.substring(macAdd.lastIndexOf(":")+1);
+                Log.d(TAG, "MAC Add " + aaa);
+                jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(aaa, 16), 1, 1, String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude);
                 sock.send(jsonForPositionInfo);
             }
         });

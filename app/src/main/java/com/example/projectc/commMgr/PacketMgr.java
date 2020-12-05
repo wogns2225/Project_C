@@ -2,8 +2,6 @@ package com.example.projectc.commMgr;
 
 import android.util.Log;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -11,7 +9,7 @@ public class PacketMgr {
     JSONObject json = null;
     String TAG = "PacketMgr";
 
-    public String makePktPosition(int srcID, int dstID, int typeID, LatLng payload) {
+    public String makePktPosition(int srcID, int dstID, int typeID, String payload) {
 
         /* ex. {"srcID":"0", "dstID":"1", "typeID":"1", "payload":"..."} */
         try {
