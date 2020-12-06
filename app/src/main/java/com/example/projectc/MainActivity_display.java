@@ -1,6 +1,7 @@
 package com.example.projectc;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -42,6 +43,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,7 +51,9 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     private GoogleMap mMap;
     private Marker currentMarker = null;
 
-    String TAG = "MainActivity_Display";
+    static String TAG = "MainActivity_Display";
+
+    private static Context mContext;
 
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int UPDATE_INTERVAL_MS = 1000;  // 1초
@@ -60,7 +64,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     boolean needRequest = false;
 
     // 앱을 실행하기 위해 필요한 퍼미션을 정의합니다.
-    String[] REQUIRED_PERMISSIONS  = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
     // location variable
     Location mCurrentLocation;
@@ -74,6 +78,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     // (참고로 Toast에서는 Context가 필요했습니다.)
 
     SocketMgr sock = new SocketMgr();
+    Socket mSocket;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,6 +86,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_main_display);
+
+        mContext = getApplicationContext();
 
         // location settings
         mLayout = findViewById(R.id.layout_main_display);
@@ -108,6 +115,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         btn_send_msg = findViewById(R.id.button_msg);
         btn_send_position = findViewById(R.id.button_send_position);
 
+        sock.createSocket();
 
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,7 +130,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public void onClick(View view) {
                 final String data = "test socket function";
-                Log.i(TAG, "[send btn clicked]");
+                Log.d(TAG, "[send btn clicked]");
                 sock.send(data);
             }
         });
@@ -134,16 +142,17 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 String jsonForPositionInfo;
                 PacketMgr pkt = new PacketMgr();
                 String macAdd = MainActivity.getMACAddress("wlan0");
-                String aaa = macAdd.substring(macAdd.lastIndexOf(":")+1);
+                String aaa = macAdd.substring(macAdd.lastIndexOf(":") + 1);
                 Log.d(TAG, "MAC Add " + aaa);
                 jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(aaa, 16), 1, 1, String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude);
                 sock.send(jsonForPositionInfo);
             }
         });
     }
-//      map test
+
+    //      map test
     @Override
-    public void onMapReady(final GoogleMap googleMap){
+    public void onMapReady(final GoogleMap googleMap) {
         Log.d(TAG, "onMapReady start");
         mMap = googleMap;
 
@@ -155,22 +164,22 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         /* for more detail */
         int hasFineLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
-        if(hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED && hasFineLocationPermission == PackageManager.PERMISSION_GRANTED){
+        if (hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED && hasFineLocationPermission == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Permission is granted");
             startLocationUpdates();
-        }else{
+        } else {
             Log.d(TAG, "Permission should be get to play");
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])){
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0])) {
                 Snackbar.make(mLayout, "location permission should be needed for this app",
                         Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ActivityCompat.requestPermissions( MainActivity_display.this, REQUIRED_PERMISSIONS,
+                        ActivityCompat.requestPermissions(MainActivity_display.this, REQUIRED_PERMISSIONS,
                                 PERMISSIONS_REQUEST_CODE);
                     }
                 }).show();
-            }else{
-                ActivityCompat.requestPermissions( this, REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE);
+            } else {
+                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE);
             }
         }
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
@@ -182,15 +191,15 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         });
     }
 
-    LocationCallback locationCallback = new LocationCallback(){
+    LocationCallback locationCallback = new LocationCallback() {
         @Override
-        public void onLocationResult(LocationResult locationResult){
+        public void onLocationResult(LocationResult locationResult) {
             super.onLocationResult(locationResult);
 
             List<Location> locationList = locationResult.getLocations();
 
-            if(locationList.size() > 0){
-                location = locationList.get(locationList.size()-1);
+            if (locationList.size() > 0) {
+                location = locationList.get(locationList.size() - 1);
                 mCurrentPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
                 String markerTitle = getCurrentAddress(mCurrentPosition);
@@ -205,31 +214,31 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         }
     };
 
-    public String getCurrentAddress(LatLng position){
+    public String getCurrentAddress(LatLng position) {
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses;
 
-        try{
+        try {
             addresses = geocoder.getFromLocation(position.latitude, position.longitude, 1);
-        }catch (IOException ioException){
+        } catch (IOException ioException) {
             Toast.makeText(this, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show();
             return "지오코더 서비스 사용불가";
-        }catch (IllegalArgumentException illegalArgumentException){
+        } catch (IllegalArgumentException illegalArgumentException) {
             Toast.makeText(this, "잘못된 Gps 좌표", Toast.LENGTH_LONG).show();
             return "잘못된 GPS 좌표";
         }
 
-        if(addresses == null || addresses.size() == 0){
+        if (addresses == null || addresses.size() == 0) {
             Toast.makeText(this, "주소 미발견", Toast.LENGTH_LONG).show();
             return "주소 미발견";
-        }else{
+        } else {
             Address address = addresses.get(0);
             return address.getAddressLine(0);
         }
     }
 
-    public void setCurrentLocation(Location location, String markerTitle, String markerSnippet){
-        if(currentMarker != null) currentMarker.remove();
+    public void setCurrentLocation(Location location, String markerTitle, String markerSnippet) {
+        if (currentMarker != null) currentMarker.remove();
 
         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 
@@ -245,15 +254,15 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mMap.moveCamera(cameraUpdate);
     }
 
-    private void startLocationUpdates(){
-        if(!checkLocationServiceStatus()){
+    private void startLocationUpdates() {
+        if (!checkLocationServiceStatus()) {
             Log.d(TAG, "startLocationUpdates : call showDialogForLocationServiceSetting");
             showDialogForLocationServiceSetting();
-        }else{
+        } else {
             int hasFineLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
             int hasCoarseLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
 
-            if (hasFineLocationPermission != PackageManager.PERMISSION_GRANTED || hasCoarseLocationPermission != PackageManager.PERMISSION_GRANTED   ) {
+            if (hasFineLocationPermission != PackageManager.PERMISSION_GRANTED || hasCoarseLocationPermission != PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "startLocationUpdates : 퍼미션 안가지고 있음");
                 return;
             }
@@ -265,18 +274,19 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 mMap.setMyLocationEnabled(true);
         }
     }
-    public boolean checkLocationServiceStatus(){
+
+    public boolean checkLocationServiceStatus() {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 
-    public void setDefaultLocation(LatLng default_Location){
+    public void setDefaultLocation(LatLng default_Location) {
         String marker_Title = "위치정보를 가져올 수 없음.";
         String marker_Snippet = " 위치 퍼미션과 GPS 활성 여부 확인하세요";
 
-        if(currentMarker != null) currentMarker.remove();
+        if (currentMarker != null) currentMarker.remove();
 
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(default_Location);
@@ -295,7 +305,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
     }
 
-    private boolean checkPermission(){
+    private boolean checkPermission() {
         int hasFineLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         int hasCoarseLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
 
@@ -304,33 +314,33 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     }
 
     @Override
-    public void onRequestPermissionsResult(int permsRequestCode, @NonNull String[] permissions, @NonNull int[] grandResults){
-        if(permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length){
+    public void onRequestPermissionsResult(int permsRequestCode, @NonNull String[] permissions, @NonNull int[] grandResults) {
+        if (permsRequestCode == PERMISSIONS_REQUEST_CODE && grandResults.length == REQUIRED_PERMISSIONS.length) {
             boolean check_result = true;
 
-            for (int result : grandResults){
-                if (result != PackageManager.PERMISSION_GRANTED){
+            for (int result : grandResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
                     check_result = false;
                     break;
                 }
             }
 
-            if(check_result){
+            if (check_result) {
                 startLocationUpdates();
-            }else{
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0]) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[1])){
+            } else {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[0]) ||
+                        ActivityCompat.shouldShowRequestPermissionRationale(this, REQUIRED_PERMISSIONS[1])) {
                     /* 사용자가 거부만 선택 */
                     Snackbar.make(mLayout, "퍼미션이 거부되었습니다. 앱을 다시 실행하여 퍼미션을 허용해주세요.",
-                            Snackbar.LENGTH_INDEFINITE).setAction("확인", new View.OnClickListener(){
-                                @Override
-                        public void onClick(View view){
-                                    finish();
-                                }
+                            Snackbar.LENGTH_INDEFINITE).setAction("확인", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            finish();
+                        }
                     }).show();
-                }else{
+                } else {
                     Snackbar.make(mLayout, "퍼미션이 거부되었습니다. 설정(앱 정보)에서 퍼미션을 허용해야 합니다.",
-                    Snackbar.LENGTH_INDEFINITE).setAction("확인", new View.OnClickListener() {
+                            Snackbar.LENGTH_INDEFINITE).setAction("확인", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             finish();
@@ -340,7 +350,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             }
         }
     }
-    private void showDialogForLocationServiceSetting(){
+
+    private void showDialogForLocationServiceSetting() {
         Log.d(TAG, "showDialogForLocationServiceSetting : call builder");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity_display.this);
@@ -356,9 +367,9 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         });
         Log.d(TAG, "showDialogForLocationServiceSetting : call setNegativeButton");
 
-        builder.setNegativeButton("취소", new DialogInterface.OnClickListener(){
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int id){
+            public void onClick(DialogInterface dialog, int id) {
                 dialog.cancel();
             }
         });
@@ -366,17 +377,21 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch(requestCode){
+        switch (requestCode) {
             case GPS_ENABLE_REQUEST_CODE:
-                if(checkLocationServiceStatus()){
+                if (checkLocationServiceStatus()) {
                     Log.d(TAG, "onActivityResult : GPS 활성화 되있음");
                     needRequest = true;
                     return;
                 }
                 break;
         }
+    }
+
+    public static void toShowMessage(String str) {
+        Toast.makeText(mContext, TAG + "[toShowMessage] " + str, Toast.LENGTH_SHORT).show();
     }
 }

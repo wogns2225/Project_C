@@ -10,40 +10,80 @@ import java.net.Socket;
 public class SocketMgr {
     //    socket test
     String TAG = "SocketMgr";
+    final String host_ip = "192.168.0.5";
+    final int port = 20000;
 
-    public void send(final String data){
-        final String host_ip = "192.168.0.5";
-        final int port = 20000;
+    Socket mSocket;
 
+    DataOutputStream output_stream;
+    DataInputStream input_Stream;
+
+    public void createSocket() {
+        Log.d(TAG, "[createSocket] Start");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "[createSocket] ip : [" + host_ip + "] port : [" + port + "]");
+                try {
+                    mSocket = new Socket(host_ip, port);
+                    output_stream = new DataOutputStream(mSocket.getOutputStream());
+                    input_Stream = new DataInputStream(mSocket.getInputStream());
+                } catch (IOException e) {
+                    Log.d(TAG, "[createSocket] is failed");
+                    e.printStackTrace();
+                }
+
+                while (mSocket.isConnected()) {
+                    byte[] bufRcv = new byte[1024];
+                    int rcv_size = 0;
+                    try {
+                        rcv_size = input_Stream.read(bufRcv);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.d(TAG, "read process is failed");
+                    }
+                    String rcv_str = new String(bufRcv, 0, rcv_size);
+                    if (rcv_size != 0) {
+                        Log.d(TAG, "read data for received size : [" + rcv_size + "], rcv_str :[" + rcv_str + "]");
+//                        MainActivity_display.toShowMessage(rcv_str);
+                    }
+                }
+//                Log.d(TAG, "[createSocket] rcv thread is finished");
+            }
+        }).start();
+    }
+
+    public void send(final String data) {
+        Log.d(TAG, "[send] check socket : " + mSocket);
+        if (mSocket.isClosed()) {
+            Log.d(TAG, "[send] socket was closed. try to create socket again");
+            createSocket();
+        }
         try {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        Socket sock = new Socket(host_ip, port);
-                        Log.i(TAG,"create socket ip : [" + host_ip + "] port : [" + port + "]");
-
-                        DataOutputStream out_stream = new DataOutputStream(sock.getOutputStream());
-                        out_stream.writeUTF(data);
-                        out_stream.flush();
-                        // out_stream.flush();
-                        Log.i(TAG,"send message : [" + data + "]");
-                        byte[] bufRcv = new byte[1024];
-
-                        DataInputStream inputStream = new DataInputStream(sock.getInputStream());
-                        int rcv_size = inputStream.read(bufRcv);
-                        String recv_str = new String(bufRcv, 0, rcv_size);
-
-                        Log.i(TAG,"read data for received size : ["+ rcv_size + "], recv_str :[" + recv_str + "]");
-                        System.out.println("println str : " + recv_str);
-                        sock.close();
+                        output_stream.writeUTF(data);
+                        output_stream.flush();
+                        Log.d(TAG, "[send] send message : [" + data + "]");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }).start();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.getMessage();
+        }
+    }
+
+    public void closeSocket() throws IOException {
+        if (mSocket.isConnected()) {
+            mSocket.close();
+            Log.d(TAG, "[closeSocket] is success");
+        } else {
+            Log.d(TAG, "[closeSocket] is failed");
         }
     }
 }
