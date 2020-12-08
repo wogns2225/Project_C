@@ -1,6 +1,9 @@
 package com.example.projectc.commMgr;
 
+import android.os.Message;
 import android.util.Log;
+
+import com.example.projectc.MainActivity_display;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -39,6 +42,7 @@ public class SocketMgr {
                     int rcv_size = 0;
                     try {
                         rcv_size = input_Stream.read(bufRcv);
+//                        MainActivity_display.mSocketRcvHandler.post(MainActivity_display.ru)
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.d(TAG, "read process is failed");
@@ -46,7 +50,9 @@ public class SocketMgr {
                     String rcv_str = new String(bufRcv, 0, rcv_size);
                     if (rcv_size != 0) {
                         Log.d(TAG, "read data for received size : [" + rcv_size + "], rcv_str :[" + rcv_str + "]");
-//                        MainActivity_display.toShowMessage(rcv_str);
+                        Message msg = MainActivity_display.mMySocketHandler.obtainMessage();
+                        msg.arg1 = 1;
+                        MainActivity_display.mMySocketHandler.sendMessage(msg);
                     }
                 }
 //                Log.d(TAG, "[createSocket] rcv thread is finished");

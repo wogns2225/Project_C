@@ -36,7 +36,15 @@
                 android:id="@+id/button_send_position"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Send_Pos."
+                android:text="Send_My_Pos"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="16dp" />
+
+            <Button
+                android:id="@+id/button_get_position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Get_Friend_Pos"
                 tools:layout_editor_absoluteX="16dp"
                 tools:layout_editor_absoluteY="16dp" />
 

@@ -10,7 +10,9 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -110,10 +112,12 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         Button btn_back;
         Button btn_send_msg;
         Button btn_send_position;
+        Button btn_get_position;
 
         btn_back = findViewById(R.id.button_back);
         btn_send_msg = findViewById(R.id.button_msg);
         btn_send_position = findViewById(R.id.button_send_position);
+        btn_get_position = findViewById(R.id.button_get_position);
 
         sock.createSocket();
 
@@ -142,9 +146,23 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 String jsonForPositionInfo;
                 PacketMgr pkt = new PacketMgr();
                 String macAdd = MainActivity.getMACAddress("wlan0");
-                String aaa = macAdd.substring(macAdd.lastIndexOf(":") + 1);
-                Log.d(TAG, "MAC Add " + aaa);
-                jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(aaa, 16), 1, 1, String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude);
+                String srcID = macAdd.substring(macAdd.lastIndexOf(":") + 1);
+                Log.d(TAG, "MAC Add " + srcID);
+                jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(srcID, 16), 1, 1, String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude);
+                sock.send(jsonForPositionInfo);
+            }
+        });
+
+        btn_get_position.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "[btn_get_position btn clicked]");
+                String jsonForPositionInfo;
+                PacketMgr pkt = new PacketMgr();
+                String macAdd = MainActivity.getMACAddress("wlan0");
+                String srcID = macAdd.substring(macAdd.lastIndexOf(":") + 1);
+                Log.d(TAG, "MAC Add " + srcID);
+                jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(srcID, 16), 1, 2, "");
                 sock.send(jsonForPositionInfo);
             }
         });
@@ -393,5 +411,17 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
     public static void toShowMessage(String str) {
         Toast.makeText(mContext, TAG + "[toShowMessage] " + str, Toast.LENGTH_SHORT).show();
+    }
+
+    public static final MySocketHandler mMySocketHandler = new MySocketHandler();
+
+    public static class MySocketHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+//            super.handleMessage(msg); // 핸들링 내용 기입 }
+            if(msg.arg1 == 1) {
+                toShowMessage("this is handler");
+            }
+        }
     }
 }
