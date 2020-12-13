@@ -21,6 +21,8 @@ public class SocketMgr {
     DataOutputStream output_stream;
     DataInputStream input_Stream;
 
+    boolean mStocketStatue = false;
+
     public void createSocket() {
         Log.d(TAG, "[createSocket] Start");
 
@@ -32,26 +34,33 @@ public class SocketMgr {
                     mSocket = new Socket(host_ip, port);
                     output_stream = new DataOutputStream(mSocket.getOutputStream());
                     input_Stream = new DataInputStream(mSocket.getInputStream());
+                    mStocketStatue = true;
                 } catch (IOException e) {
-                    Log.d(TAG, "[createSocket] is failed");
+                    Log.e(TAG, "[createSocket] is failed");
                     e.printStackTrace();
                 }
 
-                while (mSocket.isConnected()) {
+                while (mStocketStatue) {
                     byte[] bufRcv = new byte[1024];
                     int rcv_size = 0;
                     try {
+                        Log.d(TAG, "[createSocket] socket state" + mSocket.isConnected());
                         rcv_size = input_Stream.read(bufRcv);
 //                        MainActivity_display.mSocketRcvHandler.post(MainActivity_display.ru)
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Log.d(TAG, "read process is failed");
+                        Log.e(TAG, "[createSocket] read process is failed");
+                        try {
+                            closeSocket();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
                     }
                     String rcv_str = new String(bufRcv, 0, rcv_size);
                     if (rcv_size != 0) {
-                        Log.d(TAG, "read data for received size : [" + rcv_size + "], rcv_str :[" + rcv_str + "]");
+                        Log.d(TAG, "[createSocket] read data for received size : [" + rcv_size + "], rcv_str :[" + rcv_str + "]");
                         Message msg = MainActivity_display.mMySocketHandler.obtainMessage();
-                        msg.arg1 = 1;
+                        msg.obj = rcv_str;
                         MainActivity_display.mMySocketHandler.sendMessage(msg);
                     }
                 }
@@ -61,8 +70,8 @@ public class SocketMgr {
     }
 
     public void send(final String data) {
-        Log.d(TAG, "[send] check socket : " + mSocket);
-        if (mSocket.isClosed()) {
+        Log.d(TAG, "[send] check socket : " + mStocketStatue);
+        if (!mStocketStatue) {
             Log.d(TAG, "[send] socket was closed. try to create socket again");
             createSocket();
         }
@@ -87,9 +96,10 @@ public class SocketMgr {
     public void closeSocket() throws IOException {
         if (mSocket.isConnected()) {
             mSocket.close();
+            mStocketStatue = false;
             Log.d(TAG, "[closeSocket] is success");
         } else {
-            Log.d(TAG, "[closeSocket] is failed");
+            Log.e(TAG, "[closeSocket] is failed");
         }
     }
 }

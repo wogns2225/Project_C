@@ -1,0 +1,8 @@
+package com.example.projectc.commMgr;
+
+public class ProtocolDefine {
+    public static String SID_RegisterPosition = "1";
+    public static String SID_RegisterPosition_Resp = "11";
+    public static String SID_GetPosition = "2";
+    public static String SID_PutPosition = "3";
+}

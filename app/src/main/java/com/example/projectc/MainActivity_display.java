@@ -27,6 +27,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.projectc.commMgr.PacketMgr;
+import com.example.projectc.commMgr.ProtocolDefine;
 import com.example.projectc.commMgr.SocketMgr;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -44,13 +45,16 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.snackbar.Snackbar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 import java.util.Locale;
 
 public class MainActivity_display extends AppCompatActivity implements OnMapReadyCallback {
-    private GoogleMap mMap;
+    private static GoogleMap mMap;
     private Marker currentMarker = null;
 
     static String TAG = "MainActivity_Display";
@@ -148,7 +152,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 String macAdd = MainActivity.getMACAddress("wlan0");
                 String srcID = macAdd.substring(macAdd.lastIndexOf(":") + 1);
                 Log.d(TAG, "MAC Add " + srcID);
-                jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(srcID, 16), 1, 1, String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude);
+                jsonForPositionInfo = pkt.makeInputToJsonStr(Integer.parseInt(srcID, 16), 1, 1, String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude);
                 sock.send(jsonForPositionInfo);
             }
         });
@@ -162,7 +166,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 String macAdd = MainActivity.getMACAddress("wlan0");
                 String srcID = macAdd.substring(macAdd.lastIndexOf(":") + 1);
                 Log.d(TAG, "MAC Add " + srcID);
-                jsonForPositionInfo = pkt.makePktPosition(Integer.parseInt(srcID, 16), 1, 2, "");
+                jsonForPositionInfo = pkt.makeInputToJsonStr(Integer.parseInt(srcID, 16), 1, 2, "");
                 sock.send(jsonForPositionInfo);
             }
         });
@@ -204,7 +208,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                Log.d(TAG, "onMapClick for MyLocation : ");
+                Log.d(TAG, "onMapClick for MyLocation : " + latLng.latitude + ", " + latLng.latitude);
             }
         });
     }
@@ -410,7 +414,19 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     }
 
     public static void toShowMessage(String str) {
-        Toast.makeText(mContext, TAG + "[toShowMessage] " + str, Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, TAG + "[toShowMessage] : " + str, Toast.LENGTH_SHORT).show();
+    }
+
+    public static void toAddFriendPosition(Double latitude, Double longitude) {
+        MarkerOptions mOptions = new MarkerOptions();
+
+        mOptions.title("마커 좌표");             // 마커 타이틀
+//        Double latitude = latlng.latitude;      // 위도
+//        Double longitude = latlng.longitude;    // 경도
+        mOptions.snippet(latitude.toString() + ", " + longitude.toString()); // 마커의 스니펫(간단한 텍스트) 설정
+        mOptions.position(new LatLng(latitude, longitude));
+        mMap.addMarker(mOptions);
+        // 마커(핀) 추가
     }
 
     public static final MySocketHandler mMySocketHandler = new MySocketHandler();
@@ -418,10 +434,29 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     public static class MySocketHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-//            super.handleMessage(msg); // 핸들링 내용 기입 }
-            if(msg.arg1 == 1) {
-                toShowMessage("this is handler");
+//            super.handleMessage(msg); // 핸들링 내용 기입
+            JSONObject json = null;
+            try {
+                json = new JSONObject(msg.obj.toString());
+                Log.d(TAG, "this is handler" + msg.obj);
+
+                String typeID = json.getString("typeID");
+                toShowMessage("typeID of received msg is (" + typeID + ")");
+
+                if(typeID.equals(ProtocolDefine.SID_PutPosition)){
+                    String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
+                    String[] separated = recv_payload.split(";");
+                    Log.d(TAG, "Received num of freind pos. " + (separated.length - 1));
+                    if (!separated[0].equals("0")) {
+                        Log.d(TAG, "Friend position : [" + separated[1] + "]");
+                        String[] position = separated[1].split(",");
+                        toAddFriendPosition(Double.parseDouble(position[0]), Double.parseDouble(position[1]));
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+
         }
     }
 }

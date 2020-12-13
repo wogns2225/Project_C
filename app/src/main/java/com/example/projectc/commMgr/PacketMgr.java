@@ -9,7 +9,7 @@ public class PacketMgr {
     JSONObject json = null;
     String TAG = "PacketMgr";
 
-    public String makePktPosition(int srcID, int dstID, int typeID, String payload) {
+    public String makeInputToJsonStr(int srcID, int dstID, int typeID, String payload) {
 
         /* ex. {"srcID":"0", "dstID":"1", "typeID":"1", "payload":"..."} */
         try {
@@ -26,4 +26,8 @@ public class PacketMgr {
             return "";
         }
     }
+/*    public JSONObject makeStrToJson(String input){
+        json = new JSONObject(input);
+        return json;
+    }*/
 }
