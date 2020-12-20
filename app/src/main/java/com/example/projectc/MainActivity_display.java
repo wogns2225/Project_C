@@ -14,9 +14,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,8 +34,6 @@ import androidx.core.content.ContextCompat;
 import com.example.projectc.commMgr.PacketMgr;
 import com.example.projectc.commMgr.ProtocolDefine;
 import com.example.projectc.commMgr.SocketMgr;
-import com.example.projectc.friendsMgr.Friend;
-import com.example.projectc.mapMgr.NodeMgr;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -90,6 +92,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     private Location location;
 
     private View mLayout;  // Snackbar 사용하기 위해서는 View가 필요합니다.
+    private PopupWindow mPopupWindow;
     // (참고로 Toast에서는 Context가 필요했습니다.)
 
     /* create instance for the other class */
@@ -136,11 +139,20 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
         /* socket test */
         Button btn_back = findViewById(R.id.button_back);
+        Button btn_test = findViewById(R.id.button_msg);
         Button btn_send_position = findViewById(R.id.button_send_position);
         Button btn_get_position = findViewById(R.id.button_get_position);
 
         sock.createSocket();
 
+        btn_test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i(TAG, "[onCreate-btn_popup] onClick");
+                /* todo. test button*/
+                mPopupWindow.dismiss();
+            }
+        });
         btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -219,13 +231,6 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             }
         });
 
-        /* show the info when the node is clicked */
-        /*
-        Friend friend = new Friend("friend1", 0.22, 0.33);
-        View infoWindow = getLayoutInflater().inflate(R.layout.node_info, null);
-        NodeMgr nodeMgr = new NodeMgr(infoWindow, friend);
-        mMap.setInfoWindowAdapter(nodeMgr);*/
-
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -245,34 +250,10 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public View getInfoContents(Marker marker) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] getInfoContents");
-                String makerInfo = "[ Node ID : " + marker.getTitle() +"], [" + marker.getSnippet() + "]";
-                Friend friend = new Friend(marker.getTitle(), marker.getSnippet());
-                View infoWindow = getLayoutInflater().inflate(R.layout.node_info, null);
-
-                TextView markerTitle = (TextView) infoWindow.findViewById(R.id.marker_name);        // set Text View for a selected marker
-                final Button helloButton = (Button) infoWindow.findViewById(R.id.marker_msg_1);           // set Button for "hello" message
-                final Button accidentButton = (Button) infoWindow.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
-
-                markerTitle.setText(makerInfo);
-                final int dstID = Integer.parseInt(marker.getTitle());
-                helloButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        toSendMessageWithSocket(mSrcID, dstID, 40, (String) helloButton.getText());
-                    }
-                });
-                accidentButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        toSendMessageWithSocket(mSrcID, dstID, 40, (String) accidentButton.getText());
-                    }
-                });
-
-                NodeMgr nodeMgr = new NodeMgr(infoWindow, friend);
-                return infoWindow;
+                toShowPopupWindow(marker);
+                return null;
             }
         });
-
     }
 
     private void startLocationUpdates() {
@@ -589,5 +570,48 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         PacketMgr pkt = new PacketMgr();
         jsonForPositionInfo = pkt.makeInputToJsonStr(Integer.parseInt(srcID, 16), dstID, dataType, payload);
         sock.send(jsonForPositionInfo);
+    }
+
+    /**
+     * to show the popup window for messaging to friend
+     *
+     * @param marker
+     *
+     * todo. the popup should be one. the selected node need to be managed by flag.
+     */
+    public void toShowPopupWindow(Marker marker){
+        /* popupWindow */
+        LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = layoutInflater.inflate(R.layout.node_info, null);
+        mPopupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT,  RelativeLayout.LayoutParams.WRAP_CONTENT);
+        mPopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
+
+        mPopupWindow.showAtLocation(mLayout, Gravity.CENTER|Gravity.BOTTOM, 0, 0);
+        mPopupWindow.update(mLayout, 0, 70, RelativeLayout.LayoutParams.WRAP_CONTENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+        /* marker Info */
+        String makerInfo = "[ Node ID : " + marker.getTitle() +"], [" + marker.getSnippet() + "]";
+
+        final int dstID = Integer.parseInt(marker.getTitle());
+
+        TextView markerTitle = (TextView) popupView.findViewById(R.id.marker_name);        // set Text View for a selected marker
+        final Button helloButton = (Button) popupView.findViewById(R.id.marker_msg_1);           // set Button for "hello" message
+        final Button accidentButton = (Button) popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
+        markerTitle.setText(makerInfo);
+
+        helloButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString)" + (String) helloButton.getText());
+                toSendMessageWithSocket(mSrcID, dstID, 40, (String) helloButton.getText());
+            }
+        });
+        accidentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] accidentButton onClick (SendString)" + (String) accidentButton.getText());
+                toSendMessageWithSocket(mSrcID, dstID, 40, (String) accidentButton.getText());
+            }
+        });
     }
 }
