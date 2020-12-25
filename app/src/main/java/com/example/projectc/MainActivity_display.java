@@ -530,13 +530,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                     }
                 }else if(typeID.equals(ProtocolDefine.SID_PutMessage)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
-                    String[] separated = recv_payload.split(";");
-                    Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend msg :. " + (separated.length - 1));
-                    if (!separated[0].equals("0")) {
-                        Log.d(TAG, "[MySocketHandler-handleMessage] Friend msg : [" + separated[1] + "]");
-                        String message = "friend ID : (" + separated[0] +"), msg : ("+ separated[1] + ")";
-                        toShowMessageWithToast(message);
-                    }
+                    Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend msg :. " + recv_payload);
+                    toShowMessageWithToast(recv_payload);
                 }
 
             } catch (JSONException e) {
