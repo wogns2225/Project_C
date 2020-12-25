@@ -92,7 +92,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     private Location location;
 
     private View mLayout;  // Snackbar 사용하기 위해서는 View가 필요합니다.
-    private PopupWindow mPopupWindow;
+    private PopupWindow mPopupWindow = null;
     // (참고로 Toast에서는 Context가 필요했습니다.)
 
     /* create instance for the other class */
@@ -117,7 +117,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mContext = getApplicationContext();
 
         String macAdd = MainActivity.getMACAddress("wlan0");
-        mSrcID = macAdd.substring(macAdd.lastIndexOf(":") + 1);
+        mSrcID = "C" + macAdd.substring(macAdd.lastIndexOf(":") + 1);
         Log.d(TAG, "[onCreate] mSrcID : (" + mSrcID + ") MAC Add : (" + macAdd + ")");
 
         // location settings
@@ -145,12 +145,23 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
         sock.createSocket();
 
+        /*mLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i(TAG, "[view_activity]");
+            }
+        });*/
+
+        /* todo. test button*/
         btn_test.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i(TAG, "[onCreate-btn_popup] onClick");
-                /* todo. test button*/
-                mPopupWindow.dismiss();
+                if(mPopupWindow != null && mPopupWindow.isShowing()) {
+                    mPopupWindow.dismiss();
+                }else{
+                    Log.i(TAG, "[onCreate-btn_popup] there is no popup");
+                }
             }
         });
         btn_back.setOnClickListener(new View.OnClickListener() {
@@ -168,7 +179,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 Log.i(TAG, "[onCreate-btn_send_position] onClick");
                 if (mCurrentPosition != null) {
                     String payload = String.valueOf(mCurrentPosition.latitude) + ',' + mCurrentPosition.longitude;
-                    toSendMessageWithSocket(mSrcID, 1, 1, payload);
+                    toSendMessageWithSocket(mSrcID, "S0", 1, payload);
                 } else {
                     Log.e(TAG, "[onCreate-btn_send_position] mCurrentPosition is NULL");
                 }
@@ -179,7 +190,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "[onCreate-btn_get_position] onClick");
-                toSendMessageWithSocket(mSrcID, 1, 2, "");
+                toSendMessageWithSocket(mSrcID, "S0", 2, "");
             }
         });
     }
@@ -228,6 +239,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public void onMapClick(LatLng latLng) {
                 Log.d(TAG, "[onMapReady] MyLocation : (" + latLng.latitude + ", " + latLng.latitude + ")");
+                if(mPopupWindow!=null) mPopupWindow.dismiss();
             }
         });
 
@@ -514,7 +526,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                     if (!separated[0].equals("0")) {
                         Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[1] + "]");
                         String[] position = separated[1].split(",");
-                        toAddFriendPosition(separated[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
+                        toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
                     }
                 }else if(typeID.equals(ProtocolDefine.SID_PutMessage)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
@@ -542,6 +554,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
      * @param longitude
      */
     public static void toAddFriendPosition(String srcID, Double latitude, Double longitude) {
+        Log.d(TAG, "[toAddFriendPosition] srcID("+ srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
         MarkerOptions mOptions = new MarkerOptions();
 
         mOptions.title(srcID);             // 마커 타이틀
@@ -565,10 +578,10 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
      * @param dataType : data type of server protocol
      * @param payload : payload to send message to server
      */
-    protected void toSendMessageWithSocket(String srcID, int dstID, int dataType, String payload){
+    protected void toSendMessageWithSocket(String srcID, String dstID, int dataType, String payload){
         String jsonForPositionInfo;
         PacketMgr pkt = new PacketMgr();
-        jsonForPositionInfo = pkt.makeInputToJsonStr(Integer.parseInt(srcID, 16), dstID, dataType, payload);
+        jsonForPositionInfo = pkt.makeInputToJsonStr(srcID, dstID, dataType, payload);
         sock.send(jsonForPositionInfo);
     }
 
@@ -576,13 +589,12 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
      * to show the popup window for messaging to friend
      *
      * @param marker
-     *
-     * todo. the popup should be one. the selected node need to be managed by flag.
      */
     public void toShowPopupWindow(Marker marker){
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = layoutInflater.inflate(R.layout.node_info, null);
+        if (mPopupWindow != null) mPopupWindow.dismiss();
         mPopupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT,  RelativeLayout.LayoutParams.WRAP_CONTENT);
         mPopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
 
@@ -592,24 +604,24 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         /* marker Info */
         String makerInfo = "[ Node ID : " + marker.getTitle() +"], [" + marker.getSnippet() + "]";
 
-        final int dstID = Integer.parseInt(marker.getTitle());
+        final String dstID = marker.getTitle();
 
-        TextView markerTitle = (TextView) popupView.findViewById(R.id.marker_name);        // set Text View for a selected marker
-        final Button helloButton = (Button) popupView.findViewById(R.id.marker_msg_1);           // set Button for "hello" message
-        final Button accidentButton = (Button) popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
+        TextView markerTitle = popupView.findViewById(R.id.marker_name);        // set Text View for a selected marker
+        final Button helloButton = popupView.findViewById(R.id.marker_msg_1);           // set Button for "hello" message
+        final Button accidentButton = popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
         markerTitle.setText(makerInfo);
 
         helloButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString)" + (String) helloButton.getText());
+                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString)" + helloButton.getText());
                 toSendMessageWithSocket(mSrcID, dstID, 40, (String) helloButton.getText());
             }
         });
         accidentButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] accidentButton onClick (SendString)" + (String) accidentButton.getText());
+                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] accidentButton onClick (SendString)" + accidentButton.getText());
                 toSendMessageWithSocket(mSrcID, dstID, 40, (String) accidentButton.getText());
             }
         });
