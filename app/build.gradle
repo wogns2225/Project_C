@@ -46,4 +46,7 @@ dependencies {
     implementation "androidx.legacy:legacy-support-core-utils:$android_x_version"
     implementation "androidx.browser:browser:$android_x_version"
     implementation "androidx.legacy:legacy-support-v4:$android_x_version"
+
+//    using recycler view
+    implementation('androidx.recyclerview:recyclerview:1.0.0')
 }

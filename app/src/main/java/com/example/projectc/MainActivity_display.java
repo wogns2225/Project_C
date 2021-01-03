@@ -19,8 +19,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,10 +32,15 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.projectc.commMgr.PacketMgr;
 import com.example.projectc.commMgr.ProtocolDefine;
 import com.example.projectc.commMgr.SocketMgr;
+import com.example.projectc.friendsMgr.Friend;
+import com.example.projectc.friendsMgr.FriendAdaptor;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -45,6 +52,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -55,6 +63,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -80,20 +89,21 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     // 앱을 실행하기 위해 필요한 퍼미션을 정의합니다.
     String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
-    // location variable
+    /* Global - Map */
     private Location mLastKnownLocation; // 현재 위치의 주위 Location 정보를 담는 location 변수
     private CameraPosition mCameraPosition;
 
     Location mCurrentLocation;
     LatLng mCurrentPosition;
+    private boolean mIsClickedFollowCamera = false;
 
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest locationRequest;
     private Location location;
 
     private View mLayout;  // Snackbar 사용하기 위해서는 View가 필요합니다.
-    private PopupWindow mPopupWindow = null;
-    // (참고로 Toast에서는 Context가 필요했습니다.)
+    private PopupWindow mMsgPopupWindow = null;
+    private static PopupWindow mNodePopupWindow = null;
 
     /* create instance for the other class */
     SocketMgr sock = new SocketMgr();
@@ -101,6 +111,12 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
     /* summary : for a protocol with server*/
     String mSrcID = "0";
+
+    /* Global - Friend */
+    private static RecyclerView mRecyclerView;
+    private static ArrayList<Friend> mFriendList;
+    private static FriendAdaptor mAdapter;
+    private static int mCountOfFriend = -1;
 
 
     @Override
@@ -137,11 +153,16 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mapFragment.getMapAsync(this);
         Log.d(TAG, "next from the map");
 
-        /* socket test */
+        /* Friend List */
+        mFriendList = new ArrayList<>();
+        mAdapter = new FriendAdaptor(mFriendList);
+
+        /* Button Event */
         Button btn_back = findViewById(R.id.button_back);
         Button btn_test = findViewById(R.id.button_msg);
         Button btn_send_position = findViewById(R.id.button_send_position);
         Button btn_get_position = findViewById(R.id.button_get_position);
+        Switch switch_toggle_cur_pos = (Switch) findViewById(R.id.switch_current_position);
 
         sock.createSocket();
 
@@ -157,11 +178,16 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public void onClick(View v) {
                 Log.i(TAG, "[onCreate-btn_popup] onClick");
-                if(mPopupWindow != null && mPopupWindow.isShowing()) {
-                    mPopupWindow.dismiss();
-                }else{
+                mIsClickedFollowCamera = !mIsClickedFollowCamera;
+                /*
+                // Show List
+                toShowListPopupWindow();
+                // Remove Popup
+                if (mMsgPopupWindow != null && mMsgPopupWindow.isShowing()) {
+                    mMsgPopupWindow.dismiss();
+                } else {
                     Log.i(TAG, "[onCreate-btn_popup] there is no popup");
-                }
+                }*/
             }
         });
         btn_back.setOnClickListener(new View.OnClickListener() {
@@ -191,6 +217,13 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             public void onClick(View view) {
                 Log.i(TAG, "[onCreate-btn_get_position] onClick");
                 toSendMessageWithSocket(mSrcID, "S0", 2, "");
+            }
+        });
+
+        switch_toggle_cur_pos.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mIsClickedFollowCamera = isChecked;
             }
         });
     }
@@ -239,7 +272,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public void onMapClick(LatLng latLng) {
                 Log.d(TAG, "[onMapReady] MyLocation : (" + latLng.latitude + ", " + latLng.latitude + ")");
-                if(mPopupWindow!=null) mPopupWindow.dismiss();
+                if (mMsgPopupWindow != null) mMsgPopupWindow.dismiss();
+                if (mNodePopupWindow != null) mNodePopupWindow.dismiss();
             }
         });
 
@@ -262,7 +296,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public View getInfoContents(Marker marker) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] getInfoContents");
-                toShowPopupWindow(marker);
+                toShowMsgPopupWindow(marker);
+                toShowListPopupWindow();
                 return null;
             }
         });
@@ -426,7 +461,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 //                String markerTitle = getCurrentAddress(mCurrentPosition);
                 String markerTitle = mSrcID;
                 String markerSnippet = "Lat : " + location.getLatitude() + "Long : " + location.getLongitude();
-                if(!mSelectedOthers)                                                                    // 다른 정보를 보기위해 current location update를 멈춤.
+                if (!mSelectedOthers)                                                                    // 다른 정보를 보기위해 current location update를 멈춤.
                     setCurrentLocation(location, markerTitle, markerSnippet);
                 mCurrentLocation = location;
             }
@@ -473,11 +508,14 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         markerOptions.title(markerTitle);
         markerOptions.snippet(markerSnippet);
         markerOptions.draggable(true);
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
 
         currentMarker = mMap.addMarker(markerOptions);
 
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(currentLatLng);
-        mMap.moveCamera(cameraUpdate);
+        if (mIsClickedFollowCamera) {
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(currentLatLng);
+            mMap.moveCamera(cameraUpdate);
+        }
     }
 
     /**
@@ -528,7 +566,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                         String[] position = separated[1].split(",");
                         toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
                     }
-                }else if(typeID.equals(ProtocolDefine.SID_PutMessage)) {
+                } else if (typeID.equals(ProtocolDefine.SID_PutMessage)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
                     Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend msg :. " + recv_payload);
                     toShowMessageWithToast(recv_payload);
@@ -549,17 +587,26 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
      * @param longitude
      */
     public static void toAddFriendPosition(String srcID, Double latitude, Double longitude) {
-        Log.d(TAG, "[toAddFriendPosition] srcID("+ srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
+        Log.d(TAG, "[toAddFriendPosition] srcID(" + srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
+        /* add node in map as marker */
         MarkerOptions mOptions = new MarkerOptions();
 
         mOptions.title(srcID);             // 마커 타이틀
         mOptions.snippet(latitude.toString() + ", " + longitude.toString()); // 마커의 스니펫(간단한 텍스트) 설정
         mOptions.position(new LatLng(latitude, longitude));
         mMap.addMarker(mOptions);
+
+        /* add node into list */
+        mCountOfFriend++;
+        Friend friend = new Friend(srcID, "snippet");
+        mFriendList.add(friend);
+        mAdapter.notifyDataSetChanged();
+
     }
 
     /**
      * a wrapper function to show the message with toast
+     *
      * @param str
      */
     public static void toShowMessageWithToast(String str) {
@@ -567,13 +614,13 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     }
 
     /**
-     *
-     * @param srcID : client ID
-     * @param dstID : server ID
+     * @param srcID    : client ID
+     * @param dstID    : server ID
      * @param dataType : data type of server protocol
-     * @param payload : payload to send message to server
+     * @param payload  : payload to send message to server
      */
-    protected void toSendMessageWithSocket(String srcID, String dstID, int dataType, String payload){
+    protected void toSendMessageWithSocket(String srcID, String dstID, int dataType, String payload) {
+        /* todo. handler an exception for no server */
         String jsonForPositionInfo;
         PacketMgr pkt = new PacketMgr();
         jsonForPositionInfo = pkt.makeInputToJsonStr(srcID, dstID, dataType, payload);
@@ -585,25 +632,24 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
      *
      * @param marker
      */
-    public void toShowPopupWindow(Marker marker){
+    public void toShowMsgPopupWindow(Marker marker) {
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = layoutInflater.inflate(R.layout.node_info, null);
-        if (mPopupWindow != null) mPopupWindow.dismiss();
-        mPopupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT,  RelativeLayout.LayoutParams.WRAP_CONTENT);
-        mPopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
 
-        mPopupWindow.showAtLocation(mLayout, Gravity.CENTER|Gravity.BOTTOM, 0, 0);
-        mPopupWindow.update(mLayout, 0, 70, RelativeLayout.LayoutParams.WRAP_CONTENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
-
-        /* marker Info */
-        String makerInfo = "[ Node ID : " + marker.getTitle() +"], [" + marker.getSnippet() + "]";
-
-        final String dstID = marker.getTitle();
+        if (mMsgPopupWindow != null) mMsgPopupWindow.dismiss();
+        mMsgPopupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        mMsgPopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
+        mMsgPopupWindow.showAtLocation(mLayout, Gravity.CENTER | Gravity.BOTTOM, 0, 0);
+        mMsgPopupWindow.update(mLayout, 0, 70, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
         TextView markerTitle = popupView.findViewById(R.id.marker_name);        // set Text View for a selected marker
         final Button helloButton = popupView.findViewById(R.id.marker_msg_1);           // set Button for "hello" message
         final Button accidentButton = popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
+
+        /* marker Info */
+        String makerInfo = "[ Node ID : " + marker.getTitle() + "], [" + marker.getSnippet() + "]";
+        final String dstID = marker.getTitle();
         markerTitle.setText(makerInfo);
 
         helloButton.setOnClickListener(new View.OnClickListener() {
@@ -620,5 +666,38 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 toSendMessageWithSocket(mSrcID, dstID, 40, (String) accidentButton.getText());
             }
         });
+    }
+
+    public void toShowListPopupWindow() {
+        /* popupWindow */
+        LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        final View listPopupView = layoutInflater.inflate(R.layout.node_list, null);
+
+        if (mNodePopupWindow != null) mNodePopupWindow.dismiss();
+        mNodePopupWindow = new PopupWindow(listPopupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        mNodePopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
+        mNodePopupWindow.showAtLocation(mLayout, Gravity.LEFT | Gravity.BOTTOM, 0, 0);
+        mNodePopupWindow.update(mLayout, 20, 70, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+        /* Recycler View */
+        mRecyclerView = listPopupView.findViewById(R.id.id_recycler_main_list); // findViewById(R.id.recyclerview_main_list);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        mRecyclerView.setLayoutManager(linearLayoutManager);
+        mRecyclerView.setAdapter(mAdapter);
+
+        /* Recycler behavior */
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), linearLayoutManager.getOrientation());
+        mRecyclerView.addItemDecoration(dividerItemDecoration);
+
+/*        Button buttonInsert = (Button)listPopupView.findViewById(R.id.test_add_node);
+        buttonInsert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCountOfFriend++;
+                Friend friend = new Friend(nameOfFriend, "snippet");
+                mFriendList.add(friend);
+                mAdapter.notifyDataSetChanged();
+            }
+        });*/
     }
 }

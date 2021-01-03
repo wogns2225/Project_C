@@ -3,9 +3,9 @@ package com.example.projectc.friendsMgr;
 import android.util.Log;
 
 public class Friend {
-    String mFriendId = "none";
-    double mFriendLat = 0;
-    double mFriendLong = 0;
+    private String mFriendId = "none";
+    private double mFriendLat = 0;
+    private double mFriendLong = 0;
 
     String TAG = "Friend Class";
 
@@ -25,13 +25,27 @@ public class Friend {
                 "], Longitude : [" + mFriendLong + "]");
     }
 
-    public String getFriendID(){
+    public String getFriendID() {
         return mFriendId;
     }
-    public double getFriendLat(){
+
+    public double getFriendLat() {
         return mFriendLat;
     }
-    public double getFriendLong(){
+
+    public double getFriendLong() {
         return mFriendLong;
+    }
+
+    public void setFriendId(String mFriendId) {
+        this.mFriendId = mFriendId;
+    }
+
+    public void setFriendLat(double mFriendLat) {
+        this.mFriendLat = mFriendLat;
+    }
+
+    public void setFriendLong(double mFriendLong) {
+        this.mFriendLong = mFriendLong;
     }
 }

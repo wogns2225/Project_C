@@ -18,6 +18,15 @@
             android:layout_height="match_parent"
             tools:context=".MapsActivity" />
 
+        <Switch
+            android:id="@+id/switch_current_position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignRight="@id/google_map"
+            android:layout_marginTop="50dp"
+            android:layout_marginRight="7dp"
+            android:text="" />
+
         <LinearLayout
             android:id="@+id/buttonLayout"
             android:layout_width="match_parent"
