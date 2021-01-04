@@ -7,16 +7,22 @@
 
     <TextView
         android:id="@+id/id_recycler_textview"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:text="[Friend List]"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/id_recycler_main_list" />
+        android:background="#463AB7"
+        android:gravity="center"
+        android:text="@string/title_friend_list"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/id_recycler_main_list"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/id_recycler_main_list"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:paddingLeft="15dp"
         android:scrollbarFadeDuration="0"
         android:scrollbarSize="5dp"
         android:scrollbars="vertical"
