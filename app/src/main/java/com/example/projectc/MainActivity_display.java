@@ -452,8 +452,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             if (locationList.size() > 0) {
                 location = locationList.get(locationList.size() - 1);
                 /* Todo. should be removed */
-//                location.setLatitude(37.7737889);
-//                location.setLongitude(126.6852978);
+                location.setLatitude(37.6737889);
+                location.setLongitude(126.6852978);
                 /* Todo End */
                 mCurrentPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
@@ -651,7 +651,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         final Button accidentButton = popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
 
         /* marker Info */
-        String makerInfo = "[ Node ID : " + marker.getTitle() + "], [" + marker.getSnippet() + "]";
+        String makerInfo = "[ To : " + marker.getTitle() + " ]";
         final String dstID = marker.getTitle();
         markerTitle.setText(makerInfo);
 

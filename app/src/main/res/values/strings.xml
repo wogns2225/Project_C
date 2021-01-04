@@ -2,4 +2,5 @@
     <string name="app_name">Project C</string>
     <string name="accident">Accident</string>
     <string name="hello">Hello</string>
+    <string name="title_friend_list"><u>Friend List</u></string>
 </resources>

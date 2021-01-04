@@ -17,7 +17,11 @@
             android:id="@+id/marker_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="marker_name" />
+            android:background="#463AB7"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:text=" [To whom?] " />
 
         <LinearLayout
             android:layout_width="match_parent"
