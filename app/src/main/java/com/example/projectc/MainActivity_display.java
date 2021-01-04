@@ -133,7 +133,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mContext = getApplicationContext();
 
         String macAdd = MainActivity.getMACAddress("wlan0");
-        mSrcID = "C" + macAdd.substring(macAdd.lastIndexOf(":") + 1);
+        mSrcID = "C" + macAdd.substring(macAdd.lastIndexOf(":") + 2);
         Log.d(TAG, "[onCreate] mSrcID : (" + mSrcID + ") MAC Add : (" + macAdd + ")");
 
         // location settings
@@ -162,7 +162,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         Button btn_test = findViewById(R.id.button_msg);
         Button btn_send_position = findViewById(R.id.button_send_position);
         Button btn_get_position = findViewById(R.id.button_get_position);
-        Switch switch_toggle_cur_pos = (Switch) findViewById(R.id.switch_current_position);
+        Switch switch_toggle_cur_pos = findViewById(R.id.switch_current_position);
 
         sock.createSocket();
 
@@ -390,7 +390,6 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     /**
      * show popup(Dialog) for location service setting(GPS and Network)
      *
-     * @param none
      * @author wogns2225@gmail.com
      * @version 0
      */
@@ -453,8 +452,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             if (locationList.size() > 0) {
                 location = locationList.get(locationList.size() - 1);
                 /* Todo. should be removed */
-                location.setLatitude(37.5737889);
-                location.setLongitude(126.6852978);
+//                location.setLatitude(37.7737889);
+//                location.setLongitude(126.6852978);
                 /* Todo End */
                 mCurrentPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
@@ -547,6 +546,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     public static class MySocketHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
+            int numOfComponent = 0;
             JSONObject json = null;
             try {
                 json = new JSONObject(msg.obj.toString());
@@ -560,12 +560,16 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                 if (typeID.equals(ProtocolDefine.SID_PutPosition)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
                     String[] separated = recv_payload.split(";");
-                    Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend pos. " + (separated.length - 1));
-                    if (!separated[0].equals("0")) {
-                        Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[1] + "]");
-                        String[] position = separated[1].split(",");
-                        toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
+                    if (separated[0].equals("0")) {
+                        Log.d(TAG, "[MySocketHandler-handleMessage] Number of friend is 0");
+                    } else {
+                        for (numOfComponent = 1; numOfComponent < separated.length; numOfComponent++) {
+                            Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[numOfComponent] + "]");
+                            String[] position = separated[numOfComponent].split(",");
+                            toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
+                        }
                     }
+
                 } else if (typeID.equals(ProtocolDefine.SID_PutMessage)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
                     Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend msg :. " + recv_payload);
@@ -601,7 +605,6 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         Friend friend = new Friend(srcID, "snippet");
         mFriendList.add(friend);
         mAdapter.notifyDataSetChanged();
-
     }
 
     /**
