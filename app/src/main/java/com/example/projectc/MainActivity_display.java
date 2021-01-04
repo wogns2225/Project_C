@@ -658,7 +658,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         helloButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString)" + helloButton.getText());
+                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString) ." + helloButton.getText());
                 toSendMessageWithSocket(mSrcID, dstID, 40, (String) helloButton.getText());
             }
         });
