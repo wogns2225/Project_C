@@ -14,14 +14,26 @@ import com.example.projectc.R;
 
 import java.util.ArrayList;
 
-public class FriendAdaptor extends RecyclerView.Adapter<FriendAdaptor.FriendViewHolder> {
+public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendViewHolder> {
+    private String TAG = "FriendAdapter";
     private ArrayList<Friend> mFriendList;
 
-    public FriendAdaptor(ArrayList<Friend> mFriendList) {
+    /* Define Interface to send position information on a click event*/
+    public interface OnItemClickListener {
+        void onItemClick(View v, int pos);
+    }
+
+    private OnItemClickListener mListener = null;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.mListener = listener;
+    }
+
+    public FriendAdapter(ArrayList<Friend> mFriendList) {
         this.mFriendList = mFriendList;
     }
 
-    public class FriendViewHolder extends RecyclerView.ViewHolder{
+    public class FriendViewHolder extends RecyclerView.ViewHolder {
         protected TextView nodeIndex;
         protected TextView nodeID;
 
@@ -29,6 +41,16 @@ public class FriendAdaptor extends RecyclerView.Adapter<FriendAdaptor.FriendView
             super(itemView);
             this.nodeIndex = (TextView) itemView.findViewById(R.id.node_index);
             this.nodeID = (TextView) itemView.findViewById(R.id.node_id);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int pos = getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        mListener.onItemClick(v, pos);
+                    }
+                }
+            });
         }
     }
 
@@ -60,7 +82,6 @@ public class FriendAdaptor extends RecyclerView.Adapter<FriendAdaptor.FriendView
     public int getItemCount() {
         return (null != mFriendList ? mFriendList.size() : 0);
     }
-
 
 
 }

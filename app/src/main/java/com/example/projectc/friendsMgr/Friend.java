@@ -2,10 +2,13 @@ package com.example.projectc.friendsMgr;
 
 import android.util.Log;
 
+import com.google.android.gms.maps.model.MarkerOptions;
+
 public class Friend {
     private String mFriendId = "none";
     private double mFriendLat = 0;
     private double mFriendLong = 0;
+    private MarkerOptions markerOptions;
 
     String TAG = "Friend Class";
 
@@ -23,6 +26,19 @@ public class Friend {
         Log.d(TAG, "create Friend ID : [" + mFriendId +
                 "], Latitude : [" + mFriendLat +
                 "], Longitude : [" + mFriendLong + "]");
+    }
+
+    public Friend(String mFriendId, MarkerOptions markerOptions) {
+        this.mFriendId = mFriendId;
+        this.markerOptions = markerOptions;
+    }
+
+    public MarkerOptions getMarkerOptions() {
+        return markerOptions;
+    }
+
+    public void setMarkerOptions(MarkerOptions markerOptions) {
+        this.markerOptions = markerOptions;
     }
 
     public String getFriendID() {

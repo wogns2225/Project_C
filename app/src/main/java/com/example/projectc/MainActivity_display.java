@@ -40,7 +40,7 @@ import com.example.projectc.commMgr.PacketMgr;
 import com.example.projectc.commMgr.ProtocolDefine;
 import com.example.projectc.commMgr.SocketMgr;
 import com.example.projectc.friendsMgr.Friend;
-import com.example.projectc.friendsMgr.FriendAdaptor;
+import com.example.projectc.friendsMgr.FriendAdapter;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -68,56 +68,52 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity_display extends AppCompatActivity implements OnMapReadyCallback {
-    private static GoogleMap mMap;
-    private Marker currentMarker = null;
-
     static String TAG = "MainActivity_Display";
-
+    /* android layout */
     private static Context mContext;
-
-    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
-    private static final int UPDATE_INTERVAL_MS = 1000;  // 1초
-    private static final int FASTEST_UPDATE_INTERVAL_MS = 500; // 0.5초
-
-    // onRequestPermissionsResult 에서 수신된 결과에서 ActivityCompat.request Permissions 를 사용한 퍼미션 요청을 구별하기 위해 사용됩니다.
-    private static final int PERMISSIONS_REQUEST_CODE = 100;
-    boolean needRequest = false;
-
-    /* selected a position to check some information */
-    boolean mSelectedOthers = false;
-
-    // 앱을 실행하기 위해 필요한 퍼미션을 정의합니다.
-    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
-
-    /* Global - Map */
-    private Location mLastKnownLocation; // 현재 위치의 주위 Location 정보를 담는 location 변수
-    private CameraPosition mCameraPosition;
-
-    Location mCurrentLocation;
-    LatLng mCurrentPosition;
-    private boolean mIsClickedFollowCamera = false;
-
-    private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest locationRequest;
-    private Location location;
 
     private View mLayout;  // Snackbar 사용하기 위해서는 View가 필요합니다.
     private PopupWindow mMsgPopupWindow = null;
     private static PopupWindow mNodePopupWindow = null;
 
-    /* create instance for the other class */
+    /* android layout - Friend list */
+    private static RecyclerView mRecyclerView;
+    private static ArrayList<Friend> mFriendList;
+    private static FriendAdapter mAdapter;
+    private static int mCountOfFriend = 0;
+
+    /* android permission */
+    // onRequestPermissionsResult 에서 수신된 결과에서 ActivityCompat.request Permissions 를 사용한 퍼미션 요청을 구별하기 위해 사용됩니다.
+    private static final int PERMISSIONS_REQUEST_CODE = 100;
+    boolean needRequest = false; /* todo. remove this for not used */
+
+    // 앱을 실행하기 위해 필요한 퍼미션을 정의합니다.
+    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+    /* Google MAP */
+    private static final int GPS_ENABLE_REQUEST_CODE = 2001;
+    private static final int UPDATE_INTERVAL_MS = 1000;  // 1초
+    private static final int FASTEST_UPDATE_INTERVAL_MS = 500; // 0.5초
+
+    private static GoogleMap mMap;
+    private Marker currentMarker = null;
+
+    private Location mLastKnownLocation; // 현재 위치의 주위 Location 정보를 담는 location 변수
+    private Location mCurrentLocation;
+    private LatLng mCurrentPosition;
+
+    private CameraPosition mCameraPosition;
+    private boolean mIsClickedFollowCamera = false;
+
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationRequest locationRequest;
+
+    /* socket  */
     SocketMgr sock = new SocketMgr();
     public static final MySocketHandler mMySocketHandler = new MySocketHandler();
 
-    /* summary : for a protocol with server*/
+    /* for the server protocol */
     String mSrcID = "0";
-
-    /* Global - Friend */
-    private static RecyclerView mRecyclerView;
-    private static ArrayList<Friend> mFriendList;
-    private static FriendAdaptor mAdapter;
-    private static int mCountOfFriend = -1;
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -136,7 +132,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mSrcID = "C" + macAdd.substring(macAdd.lastIndexOf(":") + 2);
         Log.d(TAG, "[onCreate] mSrcID : (" + mSrcID + ") MAC Add : (" + macAdd + ")");
 
-        // location settings
+        /* google map */
         mLayout = findViewById(R.id.layout_main_display);
         locationRequest = new LocationRequest()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -148,14 +144,31 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // map test
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.google_map);
         mapFragment.getMapAsync(this);
         Log.d(TAG, "next from the map");
 
         /* Friend List */
         mFriendList = new ArrayList<>();
-        mAdapter = new FriendAdaptor(mFriendList);
+        mAdapter = new FriendAdapter(mFriendList);
+
+        mAdapter.setOnItemClickListener(new FriendAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View v, int pos) {
+                Friend clickedFriend = mFriendList.get(pos);
+
+                LatLng currentLatLng = new LatLng(
+                        clickedFriend.getMarkerOptions().getPosition().latitude,
+                        clickedFriend.getMarkerOptions().getPosition().longitude);
+
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(currentLatLng);
+                mMap.moveCamera(cameraUpdate);
+
+                toShowMsgPopupWindow(clickedFriend.getMarkerOptions().getTitle());
+
+
+            }
+        });
 
         /* Button Event */
         Button btn_back = findViewById(R.id.button_back);
@@ -273,7 +286,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             public void onMapClick(LatLng latLng) {
                 Log.d(TAG, "[onMapReady] MyLocation : (" + latLng.latitude + ", " + latLng.latitude + ")");
                 if (mMsgPopupWindow != null) mMsgPopupWindow.dismiss();
-                if (mNodePopupWindow != null) mNodePopupWindow.dismiss();
+                /* note. popup is shown always */
+//                if (mNodePopupWindow != null) mNodePopupWindow.dismiss();
             }
         });
 
@@ -296,7 +310,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             @Override
             public View getInfoContents(Marker marker) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] getInfoContents");
-                toShowMsgPopupWindow(marker);
+
+                toShowMsgPopupWindow(marker.getTitle());
                 toShowListPopupWindow();
                 return null;
             }
@@ -445,6 +460,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
+            Location location;
             super.onLocationResult(locationResult);
 
             List<Location> locationList = locationResult.getLocations();
@@ -452,7 +468,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
             if (locationList.size() > 0) {
                 location = locationList.get(locationList.size() - 1);
                 /* Todo. should be removed */
-                location.setLatitude(37.6737889);
+                location.setLatitude(37.5237889);
                 location.setLongitude(126.6852978);
                 /* Todo End */
                 mCurrentPosition = new LatLng(location.getLatitude(), location.getLongitude());
@@ -460,8 +476,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 //                String markerTitle = getCurrentAddress(mCurrentPosition);
                 String markerTitle = mSrcID;
                 String markerSnippet = "Lat : " + location.getLatitude() + "Long : " + location.getLongitude();
-                if (!mSelectedOthers)                                                                    // 다른 정보를 보기위해 current location update를 멈춤.
-                    setCurrentLocation(location, markerTitle, markerSnippet);
+                setCurrentLocation(location, markerTitle, markerSnippet);
                 mCurrentLocation = location;
             }
         }
@@ -506,8 +521,9 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         markerOptions.position(currentLatLng);
         markerOptions.title(markerTitle);
         markerOptions.snippet(markerSnippet);
-        markerOptions.draggable(true);
+//        markerOptions.draggable(true);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+        markerOptions.alpha(0.8f);
 
         currentMarker = mMap.addMarker(markerOptions);
 
@@ -533,7 +549,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         markerOptions.position(default_Location);
         markerOptions.title(marker_Title);
         markerOptions.snippet(marker_Snippet);
-        markerOptions.draggable(true);
+//        markerOptions.draggable(true);
         mMap.addMarker(markerOptions);
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(default_Location, 10));
@@ -568,6 +584,7 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
                             String[] position = separated[numOfComponent].split(",");
                             toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
                         }
+
                     }
 
                 } else if (typeID.equals(ProtocolDefine.SID_PutMessage)) {
@@ -598,11 +615,12 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         mOptions.title(srcID);             // 마커 타이틀
         mOptions.snippet(latitude.toString() + ", " + longitude.toString()); // 마커의 스니펫(간단한 텍스트) 설정
         mOptions.position(new LatLng(latitude, longitude));
+        mOptions.alpha(0.8f);
         mMap.addMarker(mOptions);
 
         /* add node into list */
         mCountOfFriend++;
-        Friend friend = new Friend(srcID, "snippet");
+        Friend friend = new Friend(srcID, mOptions);
         mFriendList.add(friend);
         mAdapter.notifyDataSetChanged();
     }
@@ -633,9 +651,9 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
     /**
      * to show the popup window for messaging to friend
      *
-     * @param marker
+     * @param markerID
      */
-    public void toShowMsgPopupWindow(Marker marker) {
+    public void toShowMsgPopupWindow(String markerID) {
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = layoutInflater.inflate(R.layout.node_info, null);
@@ -651,8 +669,8 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         final Button accidentButton = popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
 
         /* marker Info */
-        String makerInfo = "[ To : " + marker.getTitle() + " ]";
-        final String dstID = marker.getTitle();
+        String makerInfo = "[ To : " + markerID + " ]";
+        final String dstID = markerID;
         markerTitle.setText(makerInfo);
 
         helloButton.setOnClickListener(new View.OnClickListener() {
@@ -673,10 +691,18 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
 
     public void toShowListPopupWindow() {
         /* popupWindow */
+        if (mCountOfFriend <= 0) {
+            Log.d(TAG, "[toShowListPopupWindow] mCountOfFriend is lesser then 1");
+            return;
+        } else if (mNodePopupWindow != null) {
+            Log.d(TAG, "[toShowListPopupWindow] Node list popup is already created");
+            return;
+        }
+
+        /* Popup Window */
         LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         final View listPopupView = layoutInflater.inflate(R.layout.node_list, null);
 
-        if (mNodePopupWindow != null) mNodePopupWindow.dismiss();
         mNodePopupWindow = new PopupWindow(listPopupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         mNodePopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
         mNodePopupWindow.showAtLocation(mLayout, Gravity.LEFT | Gravity.BOTTOM, 0, 0);
@@ -692,15 +718,5 @@ public class MainActivity_display extends AppCompatActivity implements OnMapRead
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), linearLayoutManager.getOrientation());
         mRecyclerView.addItemDecoration(dividerItemDecoration);
 
-/*        Button buttonInsert = (Button)listPopupView.findViewById(R.id.test_add_node);
-        buttonInsert.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCountOfFriend++;
-                Friend friend = new Friend(nameOfFriend, "snippet");
-                mFriendList.add(friend);
-                mAdapter.notifyDataSetChanged();
-            }
-        });*/
     }
 }
