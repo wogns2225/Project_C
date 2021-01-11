@@ -1,3 +1,2 @@
-include ':naveridlogin_android_sdk_4.2.6'
 include ':app'
-rootProject.name = "Project C"
+rootProject.name = "TestApplication"

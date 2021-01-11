@@ -1,4 +1,4 @@
-package com.example.projectc.friendsMgr;
+package com.example.testapplication.FriendMgr;
 
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -10,13 +10,19 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.projectc.R;
+import com.example.testapplication.R;
+import com.naver.maps.map.overlay.Marker;
 
 import java.util.ArrayList;
 
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendViewHolder> {
     private String TAG = "FriendAdapter";
-    private ArrayList<Friend> mFriendList;
+
+    static private ArrayList<Friend> mFriendList = new ArrayList<>();
+
+    public static ArrayList<Friend> getFriendList() {
+        return mFriendList;
+    }
 
     /* Define Interface to send position information on a click event*/
     public interface OnItemClickListener {
@@ -30,7 +36,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
     }
 
     public FriendAdapter(ArrayList<Friend> mFriendList) {
-        this.mFriendList = mFriendList;
+        mFriendList = mFriendList;
     }
 
     public class FriendViewHolder extends RecyclerView.ViewHolder {
@@ -83,5 +89,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         return (null != mFriendList ? mFriendList.size() : 0);
     }
 
-
+    public static void addFriendList(String srcID, Marker marker) {
+        Friend friend = new Friend(srcID, marker);
+        mFriendList.add(friend);
+    }
 }

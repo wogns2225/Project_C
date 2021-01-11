@@ -1,22 +1,24 @@
-package com.example.projectc.friendsMgr;
+package com.example.testapplication.FriendMgr;
 
 import android.util.Log;
 
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.naver.maps.geometry.LatLng;
+import com.naver.maps.map.overlay.Marker;
 
 public class Friend {
     private String mFriendId = "none";
     private double mFriendLat = 0;
     private double mFriendLong = 0;
-    private MarkerOptions markerOptions;
+    private Marker mMarker;
+    private LatLng mLatLng;
 
     String TAG = "Friend Class";
 
-    public Friend(String friendId, String snippet) {
+    public Friend(String friendId, String nodeInfo) {
         mFriendId = friendId;
 
         Log.d(TAG, "create Friend ID : [" + mFriendId +
-                "], Snippet : [" + snippet + "]");
+                "], nodeInfo : [" + nodeInfo + "]");
     }
 
     public Friend(String friendId, double friendLat, double friendLong) {
@@ -26,19 +28,21 @@ public class Friend {
         Log.d(TAG, "create Friend ID : [" + mFriendId +
                 "], Latitude : [" + mFriendLat +
                 "], Longitude : [" + mFriendLong + "]");
+        mLatLng = new LatLng(mFriendLat, mFriendLong);
     }
 
-    public Friend(String mFriendId, MarkerOptions markerOptions) {
+    public Friend(String mFriendId, Marker marker) {
         this.mFriendId = mFriendId;
-        this.markerOptions = markerOptions;
+        this.mMarker = marker;
+        mLatLng = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
     }
 
-    public MarkerOptions getMarkerOptions() {
-        return markerOptions;
+    public Marker getMarker() {
+        return mMarker;
     }
 
-    public void setMarkerOptions(MarkerOptions markerOptions) {
-        this.markerOptions = markerOptions;
+    public void setMarkerOptions(Marker marker) {
+        this.mMarker = marker;
     }
 
     public String getFriendID() {
@@ -63,5 +67,13 @@ public class Friend {
 
     public void setFriendLong(double mFriendLong) {
         this.mFriendLong = mFriendLong;
+    }
+
+    public LatLng getLatLng() {
+        return mLatLng;
+    }
+
+    public void setLatLng(LatLng latLng) {
+        this.mLatLng = latLng;
     }
 }

@@ -32,7 +32,7 @@
                 android:id="@+id/marker_msg_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/hello"
+                android:text="@string/msg_hello"
                 tools:layout_editor_absoluteX="16dp"
                 tools:layout_editor_absoluteY="16dp" />
 
@@ -40,7 +40,7 @@
                 android:id="@+id/marker_msg_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/accident"
+                android:text="@string/msg_accident"
                 tools:layout_editor_absoluteX="116dp"
                 tools:layout_editor_absoluteY="16dp" />
         </LinearLayout>

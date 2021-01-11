@@ -1,9 +1,10 @@
-package com.example.projectc.commMgr;
+package com.example.testapplication.CommMgr;
+
 
 import android.os.Message;
 import android.util.Log;
 
-import com.example.projectc.MainActivity_display;
+import com.example.testapplication.MapFragment;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,36 +12,57 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class SocketMgr {
+    private SocketMgr() {}
+    public static SocketMgr getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
+    private static class LazyHolder {
+        private static final SocketMgr INSTANCE = new SocketMgr();
+    }
+}
+
+public class SocketMgr {
     //    socket test
     String TAG = "SocketMgr";
     final String host_ip = "192.168.0.5";
     final int port = 20000;
 
-    Socket mSocket;
+    Socket mSocket = null;
 
     DataOutputStream output_stream;
     DataInputStream input_Stream;
 
-    boolean mStocketStatue = false;
+    
+    
+    static boolean mSocketStatus = false;
 
     public void createSocket() {
         Log.d(TAG, "[createSocket] Start");
 
+        if (mSocketStatus){
+            Log.d(TAG, "[createSocket] socket is already created, so skip");
+            return;
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.d(TAG, "[createSocket] ip : [" + host_ip + "] port : [" + port + "]");
                 try {
                     mSocket = new Socket(host_ip, port);
+                    if(mSocket == null){
+                        mSocketStatus = false;
+                        return;
+                    }
                     output_stream = new DataOutputStream(mSocket.getOutputStream());
                     input_Stream = new DataInputStream(mSocket.getInputStream());
-                    mStocketStatue = true;
+                    mSocketStatus = true;
                 } catch (IOException e) {
-                    Log.e(TAG, "[createSocket] is failed");
+                    Log.e(TAG, "[createSocket] is failed \n[ exception message " + e.getMessage() + "]");
                     e.printStackTrace();
                 }
 
-                while (mStocketStatue) {
+                while (mSocketStatus) {
                     byte[] bufRcv = new byte[1024];
                     int rcv_size = 0;
                     try {
@@ -59,9 +81,9 @@ public class SocketMgr {
                     String rcv_str = new String(bufRcv, 0, rcv_size);
                     if (rcv_size != 0) {
                         Log.d(TAG, "[createSocket] read data for received size : [" + rcv_size + "], rcv_str :[" + rcv_str + "]");
-                        Message msg = MainActivity_display.mMySocketHandler.obtainMessage();
+                        Message msg = MapFragment.mMySocketHandler.obtainMessage();
                         msg.obj = rcv_str;
-                        MainActivity_display.mMySocketHandler.sendMessage(msg);
+                        MapFragment.mMySocketHandler.sendMessage(msg);
                     }
                 }
 //                Log.d(TAG, "[createSocket] rcv thread is finished");
@@ -70,12 +92,16 @@ public class SocketMgr {
     }
 
     public void send(final String data) {
-        Log.d(TAG, "[send] check socket : " + mStocketStatue);
-        if (!mStocketStatue) {
+        Log.d(TAG, "[send] check socket : " + mSocketStatus);
+        if (!mSocketStatus) {
             Log.d(TAG, "[send] socket was closed. try to create socket again");
             createSocket();
         }
         try {
+            if(!mSocketStatus) {
+                Log.d(TAG, "[send] FAIL to create socket");
+                return;
+            }
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -96,7 +122,7 @@ public class SocketMgr {
     public void closeSocket() throws IOException {
         if (mSocket.isConnected()) {
             mSocket.close();
-            mStocketStatue = false;
+            mSocketStatus = false;
             Log.d(TAG, "[closeSocket] is success");
         } else {
             Log.e(TAG, "[closeSocket] is failed");

@@ -1,4 +1,4 @@
-package com.example.projectc;
+package com.example.testapplication;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.example.projectc.commMgr;
+package com.example.testapplication.CommMgr;
 
 import android.util.Log;
 
