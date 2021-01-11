@@ -10,9 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.testapplication.CommMgr.InterfaceForServer;
-import com.example.testapplication.CommMgr.SocketMgr;
-import com.example.testapplication.FriendMgr.FriendAdapter;
 import com.example.testapplication.MapFragment;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.CameraAnimation;
@@ -21,73 +18,71 @@ import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.Symbol;
 import com.naver.maps.map.UiSettings;
-import com.naver.maps.map.overlay.Align;
-import com.naver.maps.map.overlay.InfoWindow;
-import com.naver.maps.map.overlay.Marker;
-import com.naver.maps.map.overlay.Overlay;
 import com.naver.maps.map.overlay.PolylineOverlay;
-import com.naver.maps.map.util.MarkerIcons;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MapConfiguration {
-    private static String TAG = "MapConfiguration";
-    private static String mCountryCode;
-
-    private static LatLng mDefaultLocation = new LatLng(37.566649, 126.978448);
-    private static LatLng mCurrentLocation;
-
-    private static NaverMap mNaverMap;
-    private static Context mContext;
-
-    public MapConfiguration() {
+public class MapConfigMgr {
+    private MapConfigMgr() {
         Log.d(TAG, "[MapConfiguration]");
     }
 
-    public MapConfiguration(final NaverMap naverMap) {
-        Log.d(TAG, "[MapConfiguration]");
-        mNaverMap = naverMap;
+    public static MapConfigMgr getInstance() {
+        return LazyHolder.INSTANCE;
     }
 
-    public static String getCountryCode() {
+    private static class LazyHolder {
+        private static final MapConfigMgr INSTANCE = new MapConfigMgr();
+    }
+
+    private String TAG = "MapConfiguration";
+    private String mCountryCode;
+
+    private LatLng mDefaultLocation = new LatLng(37.566649, 126.978448);
+    private LatLng mCurrentLocation;
+
+    private NaverMap mNaverMap;
+    private Context mContext;
+
+    public String getCountryCode() {
         return mCountryCode;
     }
 
-    public static void setCountryCode(String countryCode) {
+    public void setCountryCode(String countryCode) {
         mCountryCode = countryCode;
     }
 
-    public static NaverMap getNaverMap() {
+    public NaverMap getNaverMap() {
         return mNaverMap;
     }
 
-    public static void setNaverMap(NaverMap naverMap) {
+    public void setNaverMap(NaverMap naverMap) {
         mNaverMap = naverMap;
     }
 
-    public static Context getContext() {
+    public Context getContext() {
         return mContext;
     }
 
-    public static void setContext(Context context) {
+    public void setContext(Context context) {
         mContext = context;
     }
 
-    public static LatLng getCurrentLocation() {
-        if(mCountryCode.equals("KR")) {
+    public LatLng getCurrentLocation() {
+        if (mCountryCode.equals("KR")) {
             return mCurrentLocation;
-        }else{
+        } else {
             return mDefaultLocation;
         }
     }
 
-    public static void setCurrentLocation(LatLng currentLocation) {
-        MapConfiguration.mCurrentLocation = currentLocation;
+    public void setCurrentLocation(LatLng currentLocation) {
+        mCurrentLocation = currentLocation;
     }
 
-    public static void setHandleEventListener() {
+    public void setHandleEventListener() {
         Log.d(TAG, "[setHandleEventListener]");
         mNaverMap.addOnOptionChangeListener(new NaverMap.OnOptionChangeListener() {
             @Override
@@ -124,6 +119,7 @@ public class MapConfiguration {
             public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
                 Log.d(TAG, "[setHandleEventListener-onMapClick] Latitude" + latLng.latitude + " longitude" + latLng.longitude);
                 Toast.makeText(mContext, "[onMapClick] Latitude [" + latLng.latitude + "] longitude [" + latLng.longitude + "]", Toast.LENGTH_SHORT).show();
+                MapFragment.mInfoWindow.close();
             }
         });
         mNaverMap.setOnMapLongClickListener(new NaverMap.OnMapLongClickListener() {
@@ -143,7 +139,7 @@ public class MapConfiguration {
         });
     }
 
-    public static void initializePosition(Location location) {
+    public void initializePosition(Location location) {
         Log.d(TAG, "[setHandleEventListener-onLocationChange]"
                 + " lat : " + location.getLatitude()
                 + " long : " + location.getLongitude()
@@ -151,7 +147,7 @@ public class MapConfiguration {
                 + " time : " + location.getTime()
         );
 
-        Address addresss = GeoCoderMgr.getCurrentAddress(mContext,
+        Address addresss = GeoCoderAPI.getCurrentAddress(mContext,
                 location.getLatitude(),
                 location.getLongitude());
         if (addresss != null) {
@@ -170,7 +166,7 @@ public class MapConfiguration {
 
     /* todo. change NightMode based on time */
     /* todo. change MapType and LayerGroup as dynamic*/
-    public static void setMapConfiguration(final NaverMap.MapType mapMode) {
+    public void setMapConfiguration(final NaverMap.MapType mapMode) {
         mNaverMap.setMapType(mapMode);
         mNaverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_TRAFFIC, false);
         mNaverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_BUILDING, true);
@@ -193,11 +189,11 @@ public class MapConfiguration {
 
     }
 
-    public static void setCameraPosition() {
+    public void setCameraPosition() {
         mNaverMap.setContentPadding(0, 0, 0, 0);
     }
 
-    public static void moveCameraPosition(final LatLng latLng) {
+    public void moveCameraPosition(final LatLng latLng) {
 //        LatLng southWest = new LatLng(37.5437889, 126.6452978);
 //        LatLng northEast = new LatLng(37.5937889, 126.6852978);
 //        LatLngBounds bounds = new LatLngBounds(southWest, northEast);
@@ -214,7 +210,7 @@ public class MapConfiguration {
         mNaverMap.moveCamera(cameraUpdate);
     }
 
-    public static void setPolyline() {
+    public void setPolyline() {
         List<LatLng> coords = new ArrayList<>();
         Collections.addAll(coords,
                 new LatLng(37.56445, 126.97707),
@@ -225,4 +221,5 @@ public class MapConfiguration {
         polyline.setColor(Color.GREEN);
         polyline.setMap(mNaverMap);
     }
+
 }

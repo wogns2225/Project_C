@@ -13,6 +13,7 @@ import java.net.Socket;
 
 public class SocketMgr {
     private SocketMgr() {}
+
     public static SocketMgr getInstance() {
         return LazyHolder.INSTANCE;
     }
@@ -20,22 +21,25 @@ public class SocketMgr {
     private static class LazyHolder {
         private static final SocketMgr INSTANCE = new SocketMgr();
     }
-}
 
-public class SocketMgr {
-    //    socket test
-    String TAG = "SocketMgr";
+    final String TAG = "SocketMgr";
     final String host_ip = "192.168.0.5";
     final int port = 20000;
 
-    Socket mSocket = null;
+    public Socket getSocket() {
+        return mSocket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.mSocket = socket;
+    }
+
+    private Socket mSocket = null;
 
     DataOutputStream output_stream;
     DataInputStream input_Stream;
 
-    
-    
-    static boolean mSocketStatus = false;
+    boolean mSocketStatus = false;
 
     public void createSocket() {
         Log.d(TAG, "[createSocket] Start");

@@ -15,12 +15,23 @@ import com.naver.maps.map.overlay.Marker;
 
 import java.util.ArrayList;
 
-public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendViewHolder> {
-    private String TAG = "FriendAdapter";
+public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.FriendViewHolder> {
+    private final String TAG = "FriendAdapter";
+    private ArrayList<Friend> mFriendList;
 
-    static private ArrayList<Friend> mFriendList = new ArrayList<>();
+    private FriendAdapterMgr() {
+        mFriendList = new ArrayList<>();
+    }
 
-    public static ArrayList<Friend> getFriendList() {
+    public static FriendAdapterMgr getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
+    private static class LazyHolder {
+        private static final FriendAdapterMgr INSTANCE = new FriendAdapterMgr();
+    }
+
+    public ArrayList<Friend> getFriendList() {
         return mFriendList;
     }
 
@@ -33,10 +44,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.mListener = listener;
-    }
-
-    public FriendAdapter(ArrayList<Friend> mFriendList) {
-        mFriendList = mFriendList;
     }
 
     public class FriendViewHolder extends RecyclerView.ViewHolder {
@@ -89,7 +96,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         return (null != mFriendList ? mFriendList.size() : 0);
     }
 
-    public static void addFriendList(String srcID, Marker marker) {
+    public void addFriendList(String srcID, Marker marker) {
         Friend friend = new Friend(srcID, marker);
         mFriendList.add(friend);
     }

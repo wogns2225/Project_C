@@ -1,5 +1,6 @@
 package com.example.testapplication;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,7 +16,6 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -25,12 +25,12 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.testapplication.CommMgr.InterfaceForServer;
+import com.example.testapplication.CommMgr.InterfaceForServerAPI;
 import com.example.testapplication.CommMgr.ProtocolDefine;
 import com.example.testapplication.CommMgr.SocketMgr;
-import com.example.testapplication.DeviceMgr.DeviceMgr;
-import com.example.testapplication.FriendMgr.FriendAdapter;
-import com.example.testapplication.MapMgr.MapConfiguration;
+import com.example.testapplication.DeviceMgr.DeviceAPI;
+import com.example.testapplication.FriendMgr.FriendAdapterMgr;
+import com.example.testapplication.MapMgr.MapConfigMgr;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.NaverMap;
@@ -53,25 +53,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private static View mView;
 
     /* NAVER MAP */
-    public static NaverMap mNaverMap;
+    public static NaverMap mNaverMap = null;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
     private FusedLocationSource mLocationSource;
+    public static Overlay.OnClickListener mListener;
+    public static InfoWindow mInfoWindow;
 
     /* MAP UI*/
     private static boolean mIsClickedFollowCamera = false;
     private static PopupWindow mMsgPopupWindow = null;
     private static PopupWindow mNodePopupWindow = null;
-    private static RecyclerView mRecyclerView;
 
     /* Server Comm */
     private static String mSrcID = "00";
 
     /* Socket */
-    public static SocketMgr mSock = new SocketMgr();
     public static final MySocketHandler mMySocketHandler = new MySocketHandler();
-
-    /* Friend */
-    private static FriendAdapter mFriendAdapter;
 
     @Override
     public View onCreateView(
@@ -88,11 +85,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         Log.d(TAG, "onViewCreated");
         mView = view;
         if (!mInitialized) {
-            mSock.createSocket();
+            SocketMgr.getInstance().createSocket();
 
-            mFriendAdapter = new FriendAdapter(FriendAdapter.getFriendList());
-
-            String macAdd = DeviceMgr.getMACAddress("wlan0");
+            String macAdd = DeviceAPI.getMACAddress("wlan0");
             mSrcID = "C" + macAdd.substring(macAdd.lastIndexOf(":") + 1);
             mLocationSource = new FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE);
             FragmentManager fm = getChildFragmentManager();
@@ -118,13 +113,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     public void setAdapterHandler(final View view) {
-        mFriendAdapter.setOnItemClickListener(new FriendAdapter.OnItemClickListener() {
+        FriendAdapterMgr.getInstance().setOnItemClickListener(new FriendAdapterMgr.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int pos) {
-                LatLng cameraPosition = FriendAdapter.getFriendList().get(pos).getLatLng();
-                MapConfiguration.moveCameraPosition(cameraPosition);
+                LatLng cameraPosition = FriendAdapterMgr.getInstance().getFriendList().get(pos).getLatLng();
+                MapConfigMgr.getInstance().moveCameraPosition(cameraPosition);
 
-                toShowMsgPopupWindow(mFriendAdapter.getFriendList().get(pos).getFriendID());
+                toShowMsgPopupWindow(FriendAdapterMgr.getInstance().getFriendList().get(pos).getFriendID());
             }
         });
     }
@@ -151,7 +146,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         view.findViewById(R.id.button_friend).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InterfaceForServer.toSendMessageWithSocket(mSock, mSrcID, "S0", 2, "");
+                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", 2, "");
             }
         });
 
@@ -183,24 +178,53 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
         Log.d(TAG, "[onMapReady] ");
-        mNaverMap = naverMap;
-        mNaverMap.setLocationSource(mLocationSource);
-        MapConfiguration.setNaverMap(mNaverMap);
-        MapConfiguration.setContext(getContext());
-        MapConfiguration.setHandleEventListener();
-        MapConfiguration.setMapConfiguration(NaverMap.MapType.Navi);
-        MapConfiguration.setCameraPosition();
-//        MapConfiguration.setMarker();
-        MapConfiguration.setPolyline();
+        if (mNaverMap == null) {
+            mNaverMap = naverMap;
+            mNaverMap.setLocationSource(mLocationSource);
+            MapConfigMgr.getInstance().setNaverMap(mNaverMap);
+            MapConfigMgr.getInstance().setContext(getContext());
+            MapConfigMgr.getInstance().setHandleEventListener();
+            MapConfigMgr.getInstance().setMapConfiguration(NaverMap.MapType.Navi);
+            MapConfigMgr.getInstance().setCameraPosition();
+            MapConfigMgr.getInstance().setPolyline();
+            mInfoWindow = new InfoWindow();
+            mInfoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getContext()) {
+                @NonNull
+                @Override
+                public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                    CharSequence strTag = (CharSequence) infoWindow.getMarker().getTag();
+                    if (strTag != null) {
+                        return "User Information : " + (CharSequence) infoWindow.getMarker().getTag();
+                    } else {
+                        return "User Information : n/a";
+                    }
+                }
+            });
+
+            mListener = new Overlay.OnClickListener() {
+                @Override
+                public boolean onClick(@NonNull Overlay overlay) {
+                    Marker markerTemp = (Marker) overlay;
+
+                    if (markerTemp.getInfoWindow() == null) {
+                        mInfoWindow.open(markerTemp);
+                    } else {
+                        mInfoWindow.close();
+                    }
+                    toShowListPopupWindow();
+                    return true;
+                }
+            };
+        }
     }
 
     public static void onLocationChange(LatLng latLng) {
         if (mIsClickedFollowCamera) {
             Log.d(TAG, "[onLocationChange] switch state" + mIsClickedFollowCamera);
-            MapConfiguration.moveCameraPosition(MapConfiguration.getCurrentLocation());
+            MapConfigMgr.getInstance().moveCameraPosition(MapConfigMgr.getInstance().getCurrentLocation());
         }
         String currentPosition = String.valueOf(latLng.latitude) + ',' + String.valueOf(latLng.longitude);
-        InterfaceForServer.toSendMessageWithSocket(mSock, mSrcID, "S0", 1, currentPosition);
+        InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", 1, currentPosition);
     }
 
     /**
@@ -232,53 +256,52 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onClick(View v) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString) ." + helloButton.getText());
-                InterfaceForServer.toSendMessageWithSocket(mSock, mSrcID, dstID, 40, (String) helloButton.getText());
+                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, dstID, 40, (String) helloButton.getText());
             }
         });
         accidentButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] accidentButton onClick (SendString)" + accidentButton.getText());
-                InterfaceForServer.toSendMessageWithSocket(mSock, mSrcID, dstID, 40, (String) accidentButton.getText());
+                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, dstID, 40, (String) accidentButton.getText());
             }
         });
     }
 
     public void toShowListPopupWindow() {
         /* popupWindow */
-        if (FriendAdapter.getFriendList().size() <= 0) {
+        if (FriendAdapterMgr.getInstance().getFriendList().size() <= 0) {
             Log.d(TAG, "[toShowListPopupWindow] mCountOfFriend is lesser then 1");
-            return;
         } else if (mNodePopupWindow != null) {
             Log.d(TAG, "[toShowListPopupWindow] Node list popup is already created");
-            return;
+        } else {
+            Log.d(TAG, "[toShowListPopupWindow] create Node Popup Window");
+
+            /* Popup Window */
+            LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            final View listPopupView = layoutInflater.inflate(R.layout.node_list, null);
+
+            mNodePopupWindow = new PopupWindow(listPopupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            mNodePopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
+            mNodePopupWindow.showAtLocation(mView, Gravity.LEFT | Gravity.BOTTOM, 0, 0);
+            mNodePopupWindow.update(mView, 20, 70, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+            /* Recycler View */
+            RecyclerView mRecyclerView = listPopupView.findViewById(R.id.id_recycler_main_list); // findViewById(R.id.recyclerview_main_list);
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+            mRecyclerView.setLayoutManager(linearLayoutManager);
+            mRecyclerView.setAdapter(FriendAdapterMgr.getInstance());
+
+            /* Recycler behavior */
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), linearLayoutManager.getOrientation());
+            mRecyclerView.addItemDecoration(dividerItemDecoration);
         }
-
-        /* Popup Window */
-        LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
-        final View listPopupView = layoutInflater.inflate(R.layout.node_list, null);
-
-        mNodePopupWindow = new PopupWindow(listPopupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        mNodePopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
-        mNodePopupWindow.showAtLocation(mView, Gravity.LEFT | Gravity.BOTTOM, 0, 0);
-        mNodePopupWindow.update(mView, 20, 70, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-
-        /* Recycler View */
-        mRecyclerView = listPopupView.findViewById(R.id.id_recycler_main_list); // findViewById(R.id.recyclerview_main_list);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-        mRecyclerView.setLayoutManager(linearLayoutManager);
-        mRecyclerView.setAdapter(mFriendAdapter);
-
-        /* Recycler behavior */
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), linearLayoutManager.getOrientation());
-        mRecyclerView.addItemDecoration(dividerItemDecoration);
     }
 
     public static Marker setMarker(LatLng latLng, String nodeType, String ID) {
         if (nodeType.equals("Friend")) {
-            final Marker marker = new Marker(latLng);
+            Marker marker = new Marker(latLng);
             marker.setMap(mNaverMap);
-//        marker.setMap(null);
 
             marker.setTag(ID);
             marker.setCaptionText("Test Node");
@@ -288,9 +311,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
             /* marker Color */
             marker.setIcon(MarkerIcons.BLUE);
-//        marker.setAlpha(0.8f);
+            marker.setAlpha(1.0f);
             marker.setCaptionColor(Color.BLUE);
             marker.setCaptionHaloColor(Color.rgb(200, 255, 200));
+
+            marker.setCaptionAligns(Align.Bottom);
+            marker.setHideCollidedSymbols(true);
+            marker.setOnClickListener(mListener);
+
+            return marker;
 
             /* marker size */
 //        marker.setWidth(Marker.SIZE_AUTO);
@@ -300,47 +329,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
             /* marker position */
 //        marker.setAnchor(new PointF(1,1));
-            marker.setCaptionAligns(Align.Bottom);
-            marker.setHideCollidedSymbols(true);
 
             /* 원근감 */
 //        marker.setIconPerspectiveEnabled();
 
-            final InfoWindow infoWindow = new InfoWindow();
-            infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getContext()) {
-                @NonNull
-                @Override
-                public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                    CharSequence strTag = (CharSequence) infoWindow.getMarker().getTag();
-                    if (strTag != null) {
-                        return "User Information : " + (CharSequence) infoWindow.getMarker().getTag();
-                    } else {
-                        return "User Information : n/a";
-                    }
-                }
-            });
-
-//        infoWindow.setPosition(new LatLng(37.5187911,126.6202871));
-//        infoWindow.open(mNaverMap);
-//        infoWindow.close();
-
-            Overlay.OnClickListener listener = new Overlay.OnClickListener() {
-                @Override
-                public boolean onClick(@NonNull Overlay overlay) {
-                    Marker markerTemp = (Marker) overlay;
-                    if (markerTemp.getInfoWindow() == null) {
-                        infoWindow.open(markerTemp);
-                    } else {
-                        infoWindow.close();
-                    }
-                    Toast.makeText(getContext(), "Node ID : " + overlay.getTag(), Toast.LENGTH_SHORT).show();
-                    toShowListPopupWindow();
-                    return true;
-                }
-            };
-
-            marker.setOnClickListener(listener);
-            return marker;
         }
         return null;
     }
@@ -356,8 +348,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         Log.d(TAG, "[toAddFriendPosition] srcID(" + srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
         /* add node in map as marker */
         Marker marker = setMarker(new LatLng(latitude, longitude), "Friend", srcID);
-        mFriendAdapter.addFriendList(mSrcID, marker);
-        mFriendAdapter.notifyDataSetChanged();
+        FriendAdapterMgr.getInstance().addFriendList(mSrcID, marker);
+        FriendAdapterMgr.getInstance().notifyDataSetChanged();
     }
 
     /**
@@ -365,6 +357,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
      * the message is transmitted after receiving some message from server
      */
     public static class MySocketHandler extends Handler {
+
         @Override
         public void handleMessage(Message msg) {
             int numOfComponent = 0;
@@ -387,7 +380,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         for (numOfComponent = 1; numOfComponent < separated.length; numOfComponent++) {
                             Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[numOfComponent] + "]");
                             String[] position = separated[numOfComponent].split(",");
-                            Marker marker = toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
+                            toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
                         }
 
                     }

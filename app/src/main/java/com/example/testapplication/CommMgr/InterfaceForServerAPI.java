@@ -1,7 +1,7 @@
 package com.example.testapplication.CommMgr;
 
-public class InterfaceForServer {
-    public InterfaceForServer() {
+public class InterfaceForServerAPI {
+    public InterfaceForServerAPI() {
     }
 
     /**
@@ -13,8 +13,7 @@ public class InterfaceForServer {
     public static void toSendMessageWithSocket(SocketMgr sock, String srcID, String dstID, int dataType, String payload) {
         /* todo. handler an exception for no server */
         String jsonForPositionInfo;
-        PacketMgr pkt = new PacketMgr();
-        jsonForPositionInfo = pkt.makeInputToJsonStr(srcID, dstID, dataType, payload);
+        jsonForPositionInfo = PacketAPI.makeInputToJsonStr(srcID, dstID, dataType, payload);
         sock.send(jsonForPositionInfo);
     }
 }

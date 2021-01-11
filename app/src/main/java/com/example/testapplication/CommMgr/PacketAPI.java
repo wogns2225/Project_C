@@ -5,11 +5,11 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PacketMgr {
-    JSONObject json = null;
-    String TAG = "PacketMgr";
+public class PacketAPI {
+    final static String TAG = "PacketMgr";
 
-    public String makeInputToJsonStr(String srcID, String dstID, int typeID, String payload) {
+    public static String makeInputToJsonStr(String srcID, String dstID, int typeID, String payload) {
+        JSONObject json = null;
 
         /* ex. {"srcID":"0", "dstID":"1", "typeID":"1", "payload":"..."} */
         try {
@@ -26,8 +26,4 @@ public class PacketMgr {
             return "";
         }
     }
-/*    public JSONObject makeStrToJson(String input){
-        json = new JSONObject(input);
-        return json;
-    }*/
 }

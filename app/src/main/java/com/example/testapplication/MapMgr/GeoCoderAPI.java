@@ -9,11 +9,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class GeoCoderMgr {
+public class GeoCoderAPI {
     private static String TAG = "GeocoderMgr";
-
-    public GeoCoderMgr() {
-    }
 
     public static Address getCurrentAddress(Context context, double latitude, double longitude) {
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
