@@ -54,6 +54,7 @@ public class SocketMgr {
                 Log.d(TAG, "[createSocket] ip : [" + host_ip + "] port : [" + port + "]");
                 try {
                     mSocket = new Socket(host_ip, port);
+                    mSocket.setReuseAddress(true);
                     if(mSocket == null){
                         mSocketStatus = false;
                         return;
@@ -70,7 +71,7 @@ public class SocketMgr {
                     byte[] bufRcv = new byte[1024];
                     int rcv_size = 0;
                     try {
-                        Log.d(TAG, "[createSocket] socket state" + mSocket.isConnected());
+                        Log.v(TAG, "[createSocket] socket state" + mSocket.isConnected());
                         rcv_size = input_Stream.read(bufRcv);
 //                        MainActivity_display.mSocketRcvHandler.post(MainActivity_display.ru)
                     } catch (IOException e) {

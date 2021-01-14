@@ -2,18 +2,69 @@ package com.example.testapplication;
 
 import android.os.Bundle;
 
+import com.example.testapplication.DisplayMgr.onBackPressedListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 
 import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    static long mLastTimeBackPressed;
+    private List<WeakReference<Fragment>> mFragList = new ArrayList<WeakReference<Fragment>>();
+
+    @Override
+    public void onAttachFragment(@NonNull Fragment fragment) {
+        super.onAttachFragment(fragment);
+        mFragList.add(new WeakReference(fragment));
+    }
+    public List<Fragment> getActiveFragments() {
+        ArrayList<Fragment> ret = new ArrayList<Fragment>();
+        for(WeakReference<Fragment> ref : mFragList) {
+            Fragment f = ref.get();
+            if(f != null) {
+                if(f.isVisible()) {
+                    ret.add(f);
+                }
+            }
+        }
+        return ret;
+    }
+
+    @Override
+    public void onBackPressed() {
+        for(WeakReference<Fragment> ref : mFragList){
+            Fragment fragment = ref.get();
+//            Toast.makeText(this, "size : " + mFragList.size(), Toast.LENGTH_SHORT).show();
+            if(fragment instanceof MapFragment){
+                /* todo. should be distinguished for each fragments */
+                Toast.makeText(this, "MapFragment", Toast.LENGTH_SHORT).show();
+                ((onBackPressedListener)fragment).onBackPressed();
+                return;
+            }
+        }
+
+        //두 번 클릭시 어플 종료
+        if(System.currentTimeMillis() - mLastTimeBackPressed < 1500){
+            finish();
+            return;
+        }
+        mLastTimeBackPressed = System.currentTimeMillis();
+        Toast.makeText(this,"One more \"back\" for Quit",Toast.LENGTH_SHORT).show();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
     }
 
     @Override

@@ -16,6 +16,7 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -29,6 +30,7 @@ import com.example.testapplication.CommMgr.InterfaceForServerAPI;
 import com.example.testapplication.CommMgr.ProtocolDefine;
 import com.example.testapplication.CommMgr.SocketMgr;
 import com.example.testapplication.DeviceMgr.DeviceAPI;
+import com.example.testapplication.DisplayMgr.onBackPressedListener;
 import com.example.testapplication.FriendMgr.FriendAdapterMgr;
 import com.example.testapplication.MapMgr.MapConfigMgr;
 import com.naver.maps.geometry.LatLng;
@@ -46,11 +48,14 @@ import com.naver.maps.map.util.MarkerIcons;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MapFragment extends Fragment implements OnMapReadyCallback {
+import java.util.Objects;
 
-    public static String TAG = "FirstFragment";
+public class MapFragment extends Fragment implements OnMapReadyCallback, onBackPressedListener {
+
+    public static String TAG = "MapFragment";
     public static boolean mInitialized = false;
     private static View mView;
+    private static Context mContext;
 
     /* NAVER MAP */
     public static NaverMap mNaverMap = null;
@@ -61,8 +66,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     /* MAP UI*/
     private static boolean mIsClickedFollowCamera = false;
-    private static PopupWindow mMsgPopupWindow = null;
-    private static PopupWindow mNodePopupWindow = null;
+    public static PopupWindow mMsgPopupWindow = null;
+    public static PopupWindow mNodePopupWindow = null;
 
     /* Server Comm */
     private static String mSrcID = "00";
@@ -79,11 +84,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         return inflater.inflate(R.layout.fragment_first, container, false);
     }
 
+    @Override
+    public void onBackPressed() {
+        FragmentManager fragmentManager = Objects.requireNonNull(getActivity()).getSupportFragmentManager();
+        fragmentManager.beginTransaction().remove(MapFragment.this).commit();
+        fragmentManager.popBackStack();
+    }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         Log.d(TAG, "onViewCreated");
         mView = view;
+        mContext = getContext();
         if (!mInitialized) {
             SocketMgr.getInstance().createSocket();
 
@@ -163,6 +176,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
             }
         });
+
+
     }
 
     @Override
@@ -187,6 +202,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             MapConfigMgr.getInstance().setMapConfiguration(NaverMap.MapType.Navi);
             MapConfigMgr.getInstance().setCameraPosition();
             MapConfigMgr.getInstance().setPolyline();
+
+            /* Marker Configuration */
             mInfoWindow = new InfoWindow();
             mInfoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getContext()) {
                 @NonNull
@@ -211,6 +228,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                     } else {
                         mInfoWindow.close();
                     }
+                    toShowMsgPopupWindow(markerTemp.getTag().toString());
                     toShowListPopupWindow();
                     return true;
                 }
@@ -233,6 +251,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
      * @param markerID
      */
     public void toShowMsgPopupWindow(String markerID) {
+        Log.d(TAG, "[toShowMsgPopupWindow] create Node Popup Window");
+
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
         View popupView = layoutInflater.inflate(R.layout.node_info, null);
@@ -272,7 +292,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         /* popupWindow */
         if (FriendAdapterMgr.getInstance().getFriendList().size() <= 0) {
             Log.d(TAG, "[toShowListPopupWindow] mCountOfFriend is lesser then 1");
-        } else if (mNodePopupWindow != null) {
+        } else if ((mNodePopupWindow != null) && mNodePopupWindow.isShowing()) {
             Log.d(TAG, "[toShowListPopupWindow] Node list popup is already created");
         } else {
             Log.d(TAG, "[toShowListPopupWindow] create Node Popup Window");
@@ -348,7 +368,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         Log.d(TAG, "[toAddFriendPosition] srcID(" + srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
         /* add node in map as marker */
         Marker marker = setMarker(new LatLng(latitude, longitude), "Friend", srcID);
-        FriendAdapterMgr.getInstance().addFriendList(mSrcID, marker);
+        FriendAdapterMgr.getInstance().addFriendList(srcID, marker);
         FriendAdapterMgr.getInstance().notifyDataSetChanged();
     }
 
@@ -364,11 +384,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             JSONObject json = null;
             try {
                 json = new JSONObject(msg.obj.toString());
-                Log.d(TAG, "[MySocketHandler-handleMessage] this is handler" + msg.obj);
+                Log.d(TAG, "[MySocketHandler-handleMessage] received message : " + msg.obj);
 
                 String typeID = json.getString("typeID");
                 /* todo. parser for translate the type ID to description */
-                Log.d(TAG, "전달받은 서비스 종류 : (" + typeID + ")");
+                Log.d(TAG, "[MySocketHandler-handleMessage] 전달받은 서비스 종류 : (" + typeID + ")");
 
                 /* todo. make a wrapper function to handle each service easily */
                 if (typeID.equals(ProtocolDefine.SID_PutPosition)) {
@@ -388,6 +408,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 } else if (typeID.equals(ProtocolDefine.SID_PutMessage)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
                     Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend msg :. " + recv_payload);
+                    Toast.makeText(mContext, recv_payload + " from [whom]", Toast.LENGTH_SHORT).show();
                 }
 
             } catch (JSONException e) {

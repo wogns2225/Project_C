@@ -120,6 +120,8 @@ public class MapConfigMgr {
                 Log.d(TAG, "[setHandleEventListener-onMapClick] Latitude" + latLng.latitude + " longitude" + latLng.longitude);
                 Toast.makeText(mContext, "[onMapClick] Latitude [" + latLng.latitude + "] longitude [" + latLng.longitude + "]", Toast.LENGTH_SHORT).show();
                 MapFragment.mInfoWindow.close();
+                MapFragment.mMsgPopupWindow.dismiss();
+                MapFragment.mNodePopupWindow.dismiss();
             }
         });
         mNaverMap.setOnMapLongClickListener(new NaverMap.OnMapLongClickListener() {
@@ -172,7 +174,7 @@ public class MapConfigMgr {
         mNaverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_BUILDING, true);
 
         if (mapMode == NaverMap.MapType.Navi) {
-            mNaverMap.setNightModeEnabled(true);
+            mNaverMap.setNightModeEnabled(false);
         } else if (mapMode == NaverMap.MapType.Basic) {
             mNaverMap.setIndoorEnabled(true);
             mNaverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_TRANSIT, true);
