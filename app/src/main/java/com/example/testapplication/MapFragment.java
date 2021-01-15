@@ -129,10 +129,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
         FriendAdapterMgr.getInstance().setOnItemClickListener(new FriendAdapterMgr.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int pos) {
-                LatLng cameraPosition = FriendAdapterMgr.getInstance().getFriendList().get(pos).getLatLng();
+                LatLng cameraPosition = FriendAdapterMgr.getInstance().getListFriend().get(pos).getLatLng();
                 MapConfigMgr.getInstance().moveCameraPosition(cameraPosition);
 
-                toShowMsgPopupWindow(FriendAdapterMgr.getInstance().getFriendList().get(pos).getFriendID());
+                toShowMsgPopupWindow(FriendAdapterMgr.getInstance().getListFriend().get(pos).getFriendID());
             }
         });
     }
@@ -290,7 +290,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
 
     public void toShowListPopupWindow() {
         /* popupWindow */
-        if (FriendAdapterMgr.getInstance().getFriendList().size() <= 0) {
+        if (FriendAdapterMgr.getInstance().getListFriend().size() <= 0) {
             Log.d(TAG, "[toShowListPopupWindow] mCountOfFriend is lesser then 1");
         } else if ((mNodePopupWindow != null) && mNodePopupWindow.isShowing()) {
             Log.d(TAG, "[toShowListPopupWindow] Node list popup is already created");
@@ -367,6 +367,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
     public static void toAddFriendPosition(String srcID, Double latitude, Double longitude) {
         Log.d(TAG, "[toAddFriendPosition] srcID(" + srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
         /* add node in map as marker */
+
+        if(FriendAdapterMgr.getInstance().isContainFriend(srcID)){
+            Log.d(TAG, "[toAddFriendPosition] the Map is already have the item");
+            return;
+        }
         Marker marker = setMarker(new LatLng(latitude, longitude), "Friend", srcID);
         FriendAdapterMgr.getInstance().addFriendList(srcID, marker);
         FriendAdapterMgr.getInstance().notifyDataSetChanged();

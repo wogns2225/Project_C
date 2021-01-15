@@ -1,5 +1,6 @@
 package com.example.testapplication.FriendMgr;
 
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -14,13 +15,16 @@ import com.example.testapplication.R;
 import com.naver.maps.map.overlay.Marker;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.FriendViewHolder> {
     private final String TAG = "FriendAdapter";
-    private ArrayList<Friend> mFriendList;
+    private ArrayList<Friend> mListFriend;
+    static private HashMap<String, Friend> mMapFriend;
 
     private FriendAdapterMgr() {
-        mFriendList = new ArrayList<>();
+        mListFriend = new ArrayList<>();
+        mMapFriend = new HashMap<>();
     }
 
     public static FriendAdapterMgr getInstance() {
@@ -31,8 +35,12 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
         private static final FriendAdapterMgr INSTANCE = new FriendAdapterMgr();
     }
 
-    public ArrayList<Friend> getFriendList() {
-        return mFriendList;
+    public ArrayList<Friend> getListFriend() {
+        return mListFriend;
+    }
+
+    public HashMap<String, Friend> getMapFriend() {
+        return mMapFriend;
     }
 
     /* Define Interface to send position information on a click event*/
@@ -87,17 +95,28 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
 
         String indexString = "[" + position + "] ";
         holder.nodeIndex.setText(indexString);
-        holder.nodeID.setText(mFriendList.get(position).getFriendID());
+        holder.nodeID.setText(mListFriend.get(position).getFriendID());
 
     }
 
     @Override
     public int getItemCount() {
-        return (null != mFriendList ? mFriendList.size() : 0);
+        return (null != mListFriend ? mListFriend.size() : 0);
     }
 
     public void addFriendList(String srcID, Marker marker) {
+        if (this.isContainFriend(srcID)) {
+            Log.v(TAG, "[addFriendList] the Map is already have the item");
+            return;
+        }
+        Log.v(TAG, "[addFriendList] add Friend in Friend list : [" + srcID + "]");
         Friend friend = new Friend(srcID, marker);
-        mFriendList.add(friend);
+        mListFriend.add(friend);
+        mMapFriend.put(srcID, friend);
     }
+
+    public boolean isContainFriend(String srcID) {
+        return mMapFriend.get(srcID) != null;
+    }
+
 }
