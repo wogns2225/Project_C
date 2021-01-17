@@ -19,4 +19,13 @@
     <string name="msg_hello">hello</string>
     <string name="msg_accident">accident</string>
     <string name="title_friend_list">friend_list</string>
+    <string name="search">Search</string>
+    <string name="photo">Photo</string>
+    <string name="name_id">Name/ID</string>
+    <string name="friendList">친구목록</string>
+    <string name="ban">차단목록</string>
+    <string name="alarm">알림기능</string>
+    <string name="recommend">친구추천</string>
+    <string name="carcolor">차량색</string>
+    <string name="carnumber">차번호</string>
 </resources>

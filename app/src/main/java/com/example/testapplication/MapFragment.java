@@ -8,6 +8,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -81,7 +82,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
             Bundle savedInstanceState
     ) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_first, container, false);
+        return inflater.inflate(R.layout.fragment_map, container, false);
     }
 
     @Override
@@ -123,6 +124,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
             setAdapterHandler(view);
             setButtonHandler(view);
         }
+    }
+
+    @Override
+    public void onPause() {
+        Log.d(TAG, "[onPause]");
+        MapConfigMgr.getInstance().saveCameraPosition();
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        Log.d(TAG, "[onStop]");
+        super.onStop();
     }
 
     public void setAdapterHandler(final View view) {
@@ -193,46 +207,56 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
         Log.d(TAG, "[onMapReady] ");
-        if (mNaverMap == null) {
-            mNaverMap = naverMap;
-            mNaverMap.setLocationSource(mLocationSource);
-            MapConfigMgr.getInstance().setNaverMap(mNaverMap);
-            MapConfigMgr.getInstance().setContext(getContext());
-            MapConfigMgr.getInstance().setHandleEventListener();
-            MapConfigMgr.getInstance().setMapConfiguration(NaverMap.MapType.Navi);
-            MapConfigMgr.getInstance().setCameraPosition();
-            MapConfigMgr.getInstance().setPolyline();
 
-            /* Marker Configuration */
-            mInfoWindow = new InfoWindow();
-            mInfoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getContext()) {
-                @NonNull
-                @Override
-                public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                    CharSequence strTag = (CharSequence) infoWindow.getMarker().getTag();
-                    if (strTag != null) {
-                        return "User Information : " + (CharSequence) infoWindow.getMarker().getTag();
-                    } else {
-                        return "User Information : n/a";
-                    }
+        mNaverMap = naverMap;
+        mNaverMap.setLocationSource(mLocationSource);
+        MapConfigMgr.getInstance().setNaverMap(mNaverMap);
+        MapConfigMgr.getInstance().setContext(getContext());
+        MapConfigMgr.getInstance().setHandleEventListener();
+        MapConfigMgr.getInstance().setMapConfiguration(NaverMap.MapType.Navi);
+        MapConfigMgr.getInstance().setCameraPosition();
+        MapConfigMgr.getInstance().setPolyline();
+
+        /* Marker Configuration */
+        mInfoWindow = new InfoWindow();
+        mInfoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getContext()) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                CharSequence strTag = (CharSequence) infoWindow.getMarker().getTag();
+                if (strTag != null) {
+                    return "User Information : " + (CharSequence) infoWindow.getMarker().getTag();
+                } else {
+                    return "User Information : n/a";
                 }
-            });
+            }
+        });
 
-            mListener = new Overlay.OnClickListener() {
-                @Override
-                public boolean onClick(@NonNull Overlay overlay) {
-                    Marker markerTemp = (Marker) overlay;
+        mListener = new Overlay.OnClickListener() {
+            @Override
+            public boolean onClick(@NonNull Overlay overlay) {
+                Marker markerTemp = (Marker) overlay;
 
-                    if (markerTemp.getInfoWindow() == null) {
-                        mInfoWindow.open(markerTemp);
-                    } else {
-                        mInfoWindow.close();
-                    }
-                    toShowMsgPopupWindow(markerTemp.getTag().toString());
-                    toShowListPopupWindow();
-                    return true;
+                if (markerTemp.getInfoWindow() == null) {
+                    mInfoWindow.open(markerTemp);
+                } else {
+                    mInfoWindow.close();
                 }
-            };
+                toShowMsgPopupWindow(markerTemp.getTag().toString());
+                toShowListPopupWindow();
+                return true;
+            }
+        };
+
+        if (FriendAdapterMgr.getInstance().loadFriendList()) {
+            Log.d(TAG, "[onMapReady] There was loading friend list");
+        }
+
+        if(MapConfigMgr.getInstance().getCameraPosition()!=null){
+            Log.d(TAG, "[onMapReady] There was MAP before this fragment");
+            MapConfigMgr.getInstance().moveCameraPosition(
+                    MapConfigMgr.getInstance().getCameraPosition()
+            );
         }
     }
 
@@ -368,13 +392,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
         Log.d(TAG, "[toAddFriendPosition] srcID(" + srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
         /* add node in map as marker */
 
-        if(FriendAdapterMgr.getInstance().isContainFriend(srcID)){
+        if (FriendAdapterMgr.getInstance().isContainFriend(srcID)) {
             Log.d(TAG, "[toAddFriendPosition] the Map is already have the item");
             return;
         }
         Marker marker = setMarker(new LatLng(latitude, longitude), "Friend", srcID);
         FriendAdapterMgr.getInstance().addFriendList(srcID, marker);
         FriendAdapterMgr.getInstance().notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Toast.makeText(getContext(), "OptionItemSelected", Toast.LENGTH_SHORT).show();
+        return super.onOptionsItemSelected(item);
     }
 
     /**

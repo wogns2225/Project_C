@@ -42,6 +42,7 @@ public class MapConfigMgr {
 
     private LatLng mDefaultLocation = new LatLng(37.566649, 126.978448);
     private LatLng mCurrentLocation;
+    private LatLng mCurrentCamera = null;
 
     private NaverMap mNaverMap;
     private Context mContext;
@@ -120,8 +121,10 @@ public class MapConfigMgr {
                 Log.d(TAG, "[setHandleEventListener-onMapClick] Latitude" + latLng.latitude + " longitude" + latLng.longitude);
                 Toast.makeText(mContext, "[onMapClick] Latitude [" + latLng.latitude + "] longitude [" + latLng.longitude + "]", Toast.LENGTH_SHORT).show();
                 MapFragment.mInfoWindow.close();
-                MapFragment.mMsgPopupWindow.dismiss();
-                MapFragment.mNodePopupWindow.dismiss();
+                if (MapFragment.mMsgPopupWindow != null && MapFragment.mMsgPopupWindow.isShowing())
+                    MapFragment.mMsgPopupWindow.dismiss();
+                if (MapFragment.mNodePopupWindow != null && MapFragment.mNodePopupWindow.isShowing())
+                    MapFragment.mNodePopupWindow.dismiss();
             }
         });
         mNaverMap.setOnMapLongClickListener(new NaverMap.OnMapLongClickListener() {
@@ -210,6 +213,14 @@ public class MapConfigMgr {
                 });
 
         mNaverMap.moveCamera(cameraUpdate);
+    }
+
+    public LatLng getCameraPosition(){
+        return mCurrentCamera;
+    }
+
+    public void saveCameraPosition(){
+        mCurrentCamera = mNaverMap.getCameraPosition().target;
     }
 
     public void setPolyline() {

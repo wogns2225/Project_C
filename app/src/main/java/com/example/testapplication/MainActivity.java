@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.View;
 
 import android.view.Menu;
@@ -25,17 +26,20 @@ public class MainActivity extends AppCompatActivity {
     static long mLastTimeBackPressed;
     private List<WeakReference<Fragment>> mFragList = new ArrayList<WeakReference<Fragment>>();
 
+    private static String TAG = "MainActivity";
+
     @Override
     public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
         mFragList.add(new WeakReference(fragment));
     }
+
     public List<Fragment> getActiveFragments() {
         ArrayList<Fragment> ret = new ArrayList<Fragment>();
-        for(WeakReference<Fragment> ref : mFragList) {
+        for (WeakReference<Fragment> ref : mFragList) {
             Fragment f = ref.get();
-            if(f != null) {
-                if(f.isVisible()) {
+            if (f != null) {
+                if (f.isVisible()) {
                     ret.add(f);
                 }
             }
@@ -45,24 +49,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        for(WeakReference<Fragment> ref : mFragList){
+        for (WeakReference<Fragment> ref : mFragList) {
             Fragment fragment = ref.get();
 //            Toast.makeText(this, "size : " + mFragList.size(), Toast.LENGTH_SHORT).show();
-            if(fragment instanceof MapFragment){
+            if (fragment instanceof MapFragment) {
                 /* todo. should be distinguished for each fragments */
                 Toast.makeText(this, "MapFragment", Toast.LENGTH_SHORT).show();
-                ((onBackPressedListener)fragment).onBackPressed();
+                ((onBackPressedListener) fragment).onBackPressed();
                 return;
             }
         }
 
         //두 번 클릭시 어플 종료
-        if(System.currentTimeMillis() - mLastTimeBackPressed < 1500){
+        if (System.currentTimeMillis() - mLastTimeBackPressed < 1500) {
             finish();
             return;
         }
         mLastTimeBackPressed = System.currentTimeMillis();
-        Toast.makeText(this,"One more \"back\" for Quit",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "One more \"back\" for Quit", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -96,13 +100,16 @@ public class MainActivity extends AppCompatActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                Log.d(TAG, "[onOptionsItemSelected]");
+                return true;
+            case R.id.app_bar_search:
+                Log.d(TAG, "[onOptionsItemSelected-app_bar_search]");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
+        //noinspection SimplifiableIfStatement
     }
 }

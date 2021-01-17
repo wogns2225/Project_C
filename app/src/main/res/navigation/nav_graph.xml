@@ -19,7 +19,7 @@
         android:id="@+id/MapFragment"
         android:name="com.example.testapplication.MapFragment"
         android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        tools:layout="@layout/fragment_map">
 
         <action
             android:id="@+id/action_MapFragment_to_SecondFragment"
@@ -29,7 +29,7 @@
         android:id="@+id/SecondFragment"
         android:name="com.example.testapplication.SecondFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        tools:layout="@layout/fragment_config">
 
         <action
             android:id="@+id/action_SecondFragment_to_MapFragment"

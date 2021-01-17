@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.testapplication.MapFragment;
 import com.example.testapplication.R;
 import com.naver.maps.map.overlay.Marker;
 
@@ -18,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.FriendViewHolder> {
-    private final String TAG = "FriendAdapter";
+    private final String TAG = "FriendAdapterMgr";
     private ArrayList<Friend> mListFriend;
     static private HashMap<String, Friend> mMapFriend;
 
@@ -113,6 +114,22 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
         Friend friend = new Friend(srcID, marker);
         mListFriend.add(friend);
         mMapFriend.put(srcID, friend);
+    }
+
+    public boolean loadFriendList() {
+        Log.d(TAG, "load Friend list into map, size : " + mListFriend.size());
+        if (!mMapFriend.isEmpty()) {
+            for (Friend friend : mListFriend) {
+                MapFragment.setMarker(friend.getLatLng(), "Friend", friend.getFriendID());
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void clearFriendList(String srcID, Marker marker) {
+        /* clear FriendList*/
     }
 
     public boolean isContainFriend(String srcID) {

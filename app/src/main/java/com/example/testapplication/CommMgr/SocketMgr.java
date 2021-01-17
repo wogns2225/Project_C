@@ -53,6 +53,7 @@ public class SocketMgr {
             public void run() {
                 Log.d(TAG, "[createSocket] ip : [" + host_ip + "] port : [" + port + "]");
                 try {
+                    /* todo. if the backend is dead? */
                     mSocket = new Socket(host_ip, port);
                     mSocket.setReuseAddress(true);
                     if(mSocket == null){
