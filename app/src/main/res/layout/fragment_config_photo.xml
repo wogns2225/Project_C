@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ConfigMgr.ConfigPhotoFragment">
+
+    <LinearLayout
+        android:id="@+id/photo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/Button_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="110dp" />
+
+        <ImageView
+            android:id="@+id/imageView_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:layout_editor_absoluteX="154dp"
+            tools:layout_editor_absoluteY="110dp"
+            tools:srcCompat="@tools:sample/avatars" />
+    </LinearLayout>
+</FrameLayout>

@@ -158,7 +158,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
             public void onClick(View view) {
                 Log.d(TAG, "[onViewCreated-onClick]");
 //                moveCameraPosition();
-                NavHostFragment.findNavController(MapFragment.this).navigate(R.id.action_MapFragment_to_SecondFragment);
+                NavHostFragment.findNavController(MapFragment.this).navigate(R.id.action_MapFragment_to_ConfigFragment);
             }
         });
 

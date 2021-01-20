@@ -18,21 +18,21 @@
     <fragment
         android:id="@+id/MapFragment"
         android:name="com.example.testapplication.MapFragment"
-        android:label="@string/first_fragment_label"
+        android:label="@string/map_fragment_label"
         tools:layout="@layout/fragment_map">
 
         <action
-            android:id="@+id/action_MapFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            android:id="@+id/action_MapFragment_to_ConfigFragment"
+            app:destination="@id/ConfigFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.example.testapplication.SecondFragment"
-        android:label="@string/second_fragment_label"
+        android:id="@+id/ConfigFragment"
+        android:name="com.example.testapplication.ConfigFragment"
+        android:label="@string/config_fragment_label"
         tools:layout="@layout/fragment_config">
 
         <action
-            android:id="@+id/action_SecondFragment_to_MapFragment"
+            android:id="@+id/action_ConfigFragment_to_MapFragment"
             app:destination="@id/MapFragment" />
     </fragment>
 </navigation>
