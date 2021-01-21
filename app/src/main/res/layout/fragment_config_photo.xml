@@ -13,7 +13,7 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/Button_add"
+            android:id="@+id/button_photo_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add"
@@ -26,6 +26,6 @@
             android:layout_height="wrap_content"
             tools:layout_editor_absoluteX="154dp"
             tools:layout_editor_absoluteY="110dp"
-            tools:srcCompat="@tools:sample/avatars" />
+            tools:srcCompat="@drawable/ic_launcher_background" />
     </LinearLayout>
 </FrameLayout>

@@ -63,7 +63,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
     private FusedLocationSource mLocationSource;
     public static Overlay.OnClickListener mListener;
-    public static InfoWindow mInfoWindow;
+    public static InfoWindow mInfoWindow = null;
 
     /* MAP UI*/
     private static boolean mIsClickedFollowCamera = false;

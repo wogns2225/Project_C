@@ -38,6 +38,8 @@ public class ConfigFragment extends Fragment {
 
 //        getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigPhotoFragment()).commit();
 
+        /* todo.1 create other fragments */
+        /* todo.2 apply list in fragment */
         view.findViewById(R.id.button_photo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

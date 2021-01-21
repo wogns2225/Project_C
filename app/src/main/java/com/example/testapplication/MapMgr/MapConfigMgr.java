@@ -23,6 +23,7 @@ import com.naver.maps.map.overlay.PolylineOverlay;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class MapConfigMgr {
     private MapConfigMgr() {
@@ -38,7 +39,7 @@ public class MapConfigMgr {
     }
 
     private String TAG = "MapConfiguration";
-    private String mCountryCode;
+    private String mCountryCode = null;
 
     private LatLng mDefaultLocation = new LatLng(37.566649, 126.978448);
     private LatLng mCurrentLocation;
@@ -106,7 +107,8 @@ public class MapConfigMgr {
             @Override
             public void onLocationChange(@NonNull Location location) {
                 initializePosition(location);
-                if (mCountryCode.equals("KR")) {
+
+                if (mCountryCode != null && mCountryCode.equals("KR")) {
                     MapFragment.onLocationChange(mCurrentLocation);
                 } else {
                     /* todo. should be removed */
@@ -120,7 +122,8 @@ public class MapConfigMgr {
             public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
                 Log.d(TAG, "[setHandleEventListener-onMapClick] Latitude" + latLng.latitude + " longitude" + latLng.longitude);
                 Toast.makeText(mContext, "[onMapClick] Latitude [" + latLng.latitude + "] longitude [" + latLng.longitude + "]", Toast.LENGTH_SHORT).show();
-                MapFragment.mInfoWindow.close();
+                if (MapFragment.mInfoWindow != null)
+                    MapFragment.mInfoWindow.close();
                 if (MapFragment.mMsgPopupWindow != null && MapFragment.mMsgPopupWindow.isShowing())
                     MapFragment.mMsgPopupWindow.dismiss();
                 if (MapFragment.mNodePopupWindow != null && MapFragment.mNodePopupWindow.isShowing())
@@ -215,11 +218,11 @@ public class MapConfigMgr {
         mNaverMap.moveCamera(cameraUpdate);
     }
 
-    public LatLng getCameraPosition(){
+    public LatLng getCameraPosition() {
         return mCurrentCamera;
     }
 
-    public void saveCameraPosition(){
+    public void saveCameraPosition() {
         mCurrentCamera = mNaverMap.getCameraPosition().target;
     }
 
