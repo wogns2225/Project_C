@@ -26,14 +26,14 @@
 
             <EditText
                 android:id="@+id/edit_text_name"
-                android:layout_width="wrap_content"
+                android:layout_width="130dp"
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:inputType="textPersonName" />
 
             <Button
                 android:id="@+id/button_set_name"
-                android:layout_width="wrap_content"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:text="Set" />
 
@@ -54,14 +54,14 @@
 
             <EditText
                 android:id="@+id/edit_text_number"
-                android:layout_width="wrap_content"
+                android:layout_width="130dp"
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:inputType="numberDecimal" />
 
             <Button
                 android:id="@+id/button_set_number"
-                android:layout_width="wrap_content"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:text="Set" />
 
