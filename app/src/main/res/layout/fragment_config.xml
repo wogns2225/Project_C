@@ -103,7 +103,7 @@
 
         <fragment
             android:id="@+id/fragment_place"
-            android:name="com.example.testapplication.ConfigMgr.ConfigPhotoFragment"
+            android:name="com.example.testapplication.ConfigMgr.ConfigFragmentPhoto"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
         </LinearLayout>

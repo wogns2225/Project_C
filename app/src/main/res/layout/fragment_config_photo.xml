@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ConfigMgr.ConfigPhotoFragment">
+    tools:context=".ConfigMgr.ConfigFragmentPhoto">
 
     <LinearLayout
         android:id="@+id/photo"
@@ -20,12 +20,14 @@
             tools:layout_editor_absoluteX="16dp"
             tools:layout_editor_absoluteY="110dp" />
 
-        <ImageView
-            android:id="@+id/imageView_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:layout_editor_absoluteX="154dp"
-            tools:layout_editor_absoluteY="110dp"
-            tools:srcCompat="@drawable/ic_launcher_background" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/id_recycler_photo_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbarFadeDuration="0"
+            android:scrollbarSize="5dp"
+            android:scrollbars="vertical"
+            />
     </LinearLayout>
 </FrameLayout>

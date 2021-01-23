@@ -1,79 +1,49 @@
-/*
 package com.example.testapplication.ConfigMgr.PhotoMgr;
 
-import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Log;
-
-import com.naver.maps.geometry.LatLng;
-import com.naver.maps.map.overlay.Marker;
 
 public class MyPhoto {
     private String mPhotoId = "none";
-    private BitmapFactory mBitmapFactory = null;
+    private Bitmap mBitmap = null;
+    private Uri mUri = null;
 
     String TAG = "MyPhoto Class";
 
-    public MyPhoto(String friendId, String nodeInfo) {
-        mPhotoId = friendId;
-
-        Log.d(TAG, "create Friend ID : [" + mPhotoId +
-                "], nodeInfo : [" + nodeInfo + "]");
+    public MyPhoto(String photoId, Bitmap bitmap) {
+        mPhotoId = photoId;
+        mBitmap = bitmap;
+        Log.d(TAG, "create photo ID : [" + mPhotoId + "], bitmap : [" + bitmap.toString() + "]");
     }
 
-    public MyPhoto(String friendId, double friendLat, double friendLong) {
-        mPhotoId = friendId;
-        mFriendLat = friendLat;
-        mFriendLong = friendLong;
-        Log.d(TAG, "create Friend ID : [" + mPhotoId +
-                "], Latitude : [" + mFriendLat +
-                "], Longitude : [" + mFriendLong + "]");
-        mLatLng = new LatLng(mFriendLat, mFriendLong);
+    public MyPhoto(String photoId, Uri uri) {
+        mPhotoId = photoId;
+        mUri = uri;
+        Log.d(TAG, "create photo ID : [" + mPhotoId + "], bitmap : [" + uri.toString() + "]");
     }
 
-    public MyPhoto(String mPhotoId, Marker marker) {
-        this.mPhotoId = mPhotoId;
-        this.mMarker = marker;
-        mLatLng = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
-    }
-
-    public Marker getMarker() {
-        return mMarker;
-    }
-
-    public void setMarkerOptions(Marker marker) {
-        this.mMarker = marker;
-    }
-
-    public String getFriendID() {
+    public String getPhotoId() {
         return mPhotoId;
     }
 
-    public double getFriendLat() {
-        return mFriendLat;
-    }
-
-    public double getFriendLong() {
-        return mFriendLong;
-    }
-
-    public void setFriendId(String photoId) {
+    public void setPhotoId(String photoId) {
         this.mPhotoId = photoId;
     }
 
-    public void setFriendLat(double mFriendLat) {
-        this.mFriendLat = mFriendLat;
+    public Bitmap getBitmap() {
+        return mBitmap;
     }
 
-    public void setFriendLong(double mFriendLong) {
-        this.mFriendLong = mFriendLong;
+    public void setBitmap(Bitmap bitmap) {
+        this.mBitmap = bitmap;
     }
 
-    public LatLng getLatLng() {
-        return mLatLng;
+    public Uri getUri() {
+        return mUri;
     }
 
-    public void setLatLng(LatLng latLng) {
-        this.mLatLng = latLng;
+    public void setUri(Uri uri) {
+        this.mUri = uri;
     }
 }
-*/

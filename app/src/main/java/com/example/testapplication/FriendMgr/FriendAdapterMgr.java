@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.FriendViewHolder> {
-    private final String TAG = "FriendAdapterMgr";
+    private final String TAG = "FriendAdapterMgr Class";
     private ArrayList<Friend> mListFriend;
     static private HashMap<String, Friend> mMapFriend;
 
@@ -79,8 +79,9 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
     @NonNull
     @Override
     public FriendViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.node_list_resource, parent, false);
+        Log.v(TAG, "[onCreateViewHolder]");
 
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.node_list_resource, parent, false);
         FriendViewHolder viewHolder = new FriendViewHolder(view);
 
         return viewHolder;
@@ -88,6 +89,8 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
 
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
+        Log.v(TAG, "[onBindViewHolder]");
+
         holder.nodeIndex.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         holder.nodeID.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
 
@@ -106,7 +109,7 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
     }
 
     public void addFriendList(String srcID, Marker marker) {
-        if (this.isContainFriend(srcID)) {
+        if (isContainFriend(srcID)) {
             Log.v(TAG, "[addFriendList] the Map is already have the item");
             return;
         }

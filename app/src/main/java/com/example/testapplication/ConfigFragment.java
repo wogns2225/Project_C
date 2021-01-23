@@ -10,8 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.testapplication.ConfigMgr.ConfigNameFragment;
-import com.example.testapplication.ConfigMgr.ConfigPhotoFragment;
+import com.example.testapplication.ConfigMgr.ConfigFragmentName;
+import com.example.testapplication.ConfigMgr.ConfigFragmentPhoto;
 
 public class ConfigFragment extends Fragment {
 
@@ -43,7 +43,7 @@ public class ConfigFragment extends Fragment {
         view.findViewById(R.id.button_photo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigPhotoFragment()).commit();
+                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentPhoto()).commit();
                 Toast.makeText(getContext(), "photo", Toast.LENGTH_SHORT).show();
             }
         });
@@ -51,7 +51,7 @@ public class ConfigFragment extends Fragment {
         view.findViewById(R.id.button_name).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigNameFragment()).commit();
+                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentName()).commit();
                 Toast.makeText(getContext(), "Name", Toast.LENGTH_SHORT).show();
             }
         });
