@@ -10,7 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.testapplication.ConfigMgr.ConfigFragmentName;
+import com.example.testapplication.ConfigMgr.ConfigFragmentColor;
+import com.example.testapplication.ConfigMgr.ConfigFragmentFriendList;
+import com.example.testapplication.ConfigMgr.ConfigFragmentID;
 import com.example.testapplication.ConfigMgr.ConfigFragmentPhoto;
 
 public class ConfigFragment extends Fragment {
@@ -44,15 +46,30 @@ public class ConfigFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentPhoto()).commit();
-                Toast.makeText(getContext(), "photo", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Photo", Toast.LENGTH_SHORT).show();
             }
         });
 
         view.findViewById(R.id.button_name).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentName()).commit();
+                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentID()).commit();
                 Toast.makeText(getContext(), "Name", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        view.findViewById(R.id.button_friend_list).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentFriendList()).commit();
+                Toast.makeText(getContext(), "Friend List", Toast.LENGTH_SHORT).show();
+            }
+        });
+        view.findViewById(R.id.button_color).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentColor()).commit();
+                Toast.makeText(getContext(), "Vehicle Color", Toast.LENGTH_SHORT).show();
             }
         });
     }

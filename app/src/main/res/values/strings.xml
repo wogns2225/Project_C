@@ -28,4 +28,10 @@
     <string name="recommend">친구추천</string>
     <string name="carcolor">차량색</string>
     <string name="carnumber">차번호</string>
+    <string name="blue">BLUE</string>
+    <string name="red">RED</string>
+    <string name="grey">GREY</string>
+    <string name="white">White</string>
+    <string name="black">Black</string>
+    <string name="please_select_color_of_your_vehicle">Please select color of your vehicle</string>
 </resources>

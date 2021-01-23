@@ -1,0 +1,54 @@
+package com.example.testapplication.ConfigMgr;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.testapplication.FriendMgr.FriendAdapterMgr;
+import com.example.testapplication.R;
+
+/**
+ * A fragment representing a list of Items.
+ */
+public class ConfigFragmentFriendList extends Fragment {
+    private static final String TAG = "ConfigFragmentFriendList Class";
+    private int mColumnCount = 1;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_config_friendlist, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        createListFriend(view);
+
+    }
+
+    public void createListFriend(View view) {
+        Log.v(TAG, "[createListFriend]");
+
+        /* Recycler View */
+        RecyclerView recyclerView = view.findViewById(R.id.id_recycler_Friend_list);
+        if(recyclerView == null) return;
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(FriendAdapterMgr.getInstance());
+
+        /* Recycler behavior */
+        DividerItemDecoration dividerItemDecoration =
+                new DividerItemDecoration(recyclerView.getContext(), linearLayoutManager.getOrientation());
+        recyclerView.addItemDecoration(dividerItemDecoration);
+    }
+}

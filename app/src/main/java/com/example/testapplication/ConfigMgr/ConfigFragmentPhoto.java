@@ -1,6 +1,5 @@
 package com.example.testapplication.ConfigMgr;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,15 +19,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.testapplication.ConfigMgr.PhotoMgr.MyPhotoAdapterMgr;
-import com.example.testapplication.FriendMgr.FriendAdapterMgr;
-import com.example.testapplication.MapMgr.MapConfigMgr;
 import com.example.testapplication.R;
-import com.naver.maps.geometry.LatLng;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
@@ -121,10 +114,11 @@ public class ConfigFragmentPhoto extends Fragment {
     }
 
     public void createListPhoto(View view){
-        Log.v(TAG, "[toShowListPhoto]");
+        Log.v(TAG, "[createListPhoto]");
 
         /* Recycler View */
         RecyclerView recyclerView = view.findViewById(R.id.id_recycler_photo_list);
+        if(recyclerView == null) return;
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(MyPhotoAdapterMgr.getInstance());

@@ -4,12 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:visibility="visible"
     tools:context=".ConfigFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -20,74 +23,83 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/photo"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="parent"
                 app:layout_constraintBottom_toTopOf="@+id/button_name"
-                />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="parent" />
 
             <Button
                 android:id="@+id/button_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/name_id"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_photo"
+                android:text="Name/Num"
                 app:layout_constraintBottom_toTopOf="@+id/button_friend_list"
-                />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/button_photo" />
 
             <Button
                 android:id="@+id/button_friend_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:alpha="50"
+                android:clickable="true"
+                android:enabled="false"
                 android:text="@string/friendList"
+                android:visibility="visible"
+                app:layout_constraintBottom_toTopOf="@+id/button_hate_list"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_name"
-                app:layout_constraintBottom_toTopOf="@+id/button_hate_list" />
+                app:layout_constraintTop_toBottomOf="@+id/button_name" />
 
             <Button
                 android:id="@+id/button_hate_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:clickable="true"
+                android:enabled="false"
                 android:text="@string/ban"
+                app:layout_constraintBottom_toTopOf="@+id/button_alarm"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_friend_list"
-                app:layout_constraintBottom_toTopOf="@+id/button_alarm" />
+                app:layout_constraintTop_toBottomOf="@+id/button_friend_list" />
 
             <Button
                 android:id="@+id/button_alarm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:clickable="true"
+                android:enabled="false"
                 android:text="@string/alarm"
+                app:layout_constraintBottom_toTopOf="@+id/button_recommend"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_hate_list"
-                app:layout_constraintBottom_toTopOf="@+id/button_recommend" />
+                app:layout_constraintTop_toBottomOf="@+id/button_hate_list" />
 
             <Button
                 android:id="@+id/button_recommend"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:clickable="true"
+                android:enabled="false"
                 android:text="@string/recommend"
+                app:layout_constraintBottom_toTopOf="@+id/button_color"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_alarm"
-                app:layout_constraintBottom_toTopOf="@+id/button_color" />
+                app:layout_constraintTop_toBottomOf="@+id/button_alarm" />
 
             <Button
                 android:id="@+id/button_color"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/carcolor"
+                app:layout_constraintBottom_toTopOf="@+id/button_number"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_recommend"
-                app:layout_constraintBottom_toTopOf="@+id/button_number" />
+                app:layout_constraintTop_toBottomOf="@+id/button_recommend" />
 
             <Button
                 android:id="@+id/button_number"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:text="@string/carnumber"
+                app:layout_constraintBottom_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/button_color"
-                app:layout_constraintBottom_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/button_color" />
 
             <Button
                 android:id="@+id/button_second"
@@ -97,15 +109,16 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-        <fragment
-            android:id="@+id/fragment_place"
-            android:name="com.example.testapplication.ConfigMgr.ConfigFragmentPhoto"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            <fragment
+                android:id="@+id/fragment_place"
+                android:name="com.example.testapplication.ConfigMgr.ConfigFragmentPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </LinearLayout>
     </LinearLayout>
 
