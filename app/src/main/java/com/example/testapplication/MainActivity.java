@@ -1,5 +1,6 @@
 package com.example.testapplication;
 
+import android.app.Activity;
 import android.os.Bundle;
 
 import com.example.testapplication.DisplayMgr.onBackPressedListener;
@@ -23,10 +24,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private static String TAG = "MainActivity";
+
     static long mLastTimeBackPressed;
     private List<WeakReference<Fragment>> mFragList = new ArrayList<WeakReference<Fragment>>();
+    private Activity mActivity = null;
 
-    private static String TAG = "MainActivity";
+    public Activity getActivity() {
+        return mActivity;
+    }
+
 
     @Override
     public void onAttachFragment(@NonNull Fragment fragment) {
@@ -62,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
         //두 번 클릭시 어플 종료
         if (System.currentTimeMillis() - mLastTimeBackPressed < 1500) {
+//            LoginFragment.getInstance().getOAuthLoginModule().logout(LoginFragment.getInstance().getContext());
             finish();
             return;
         }

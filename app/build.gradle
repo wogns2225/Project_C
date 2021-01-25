@@ -23,14 +23,16 @@ android {
 }
 
 dependencies {
+    def android_x_version = "1.0.0"
+
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.navigation:navigation-fragment:2.1.0'
-    implementation 'androidx.navigation:navigation-ui:2.1.0'
+    implementation 'androidx.navigation:navigation-fragment:2.3.2'
+    implementation 'androidx.navigation:navigation-ui:2.3.2'
     implementation 'org.jetbrains:annotations-java5:15.0'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation "androidx.legacy:legacy-support-v4:$android_x_version"
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     testImplementation 'junit:junit:4.12'
@@ -39,5 +41,11 @@ dependencies {
 
     /* SDK for NAVER MAP */
     implementation 'com.naver.maps:map-sdk:3.10.2'
-    implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.google.android.gms:play-services-location:17.1.0'
+
+    /* SDK for NAVER Login */
+    implementation files('libs/naveridlogin_android_sdk_4.2.6.aar')
+//    implementation 'com.naver.nid:naveridlogin-android-sdk:4.2.6'
+    implementation "androidx.legacy:legacy-support-core-utils:$android_x_version"
+    implementation "androidx.browser:browser:1.3.0"
 }

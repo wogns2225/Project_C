@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import com.example.testapplication.CommMgr.NaverLoginAPIMgr;
 import com.example.testapplication.R;
 
 public class ConfigFragmentID extends Fragment {
@@ -26,6 +27,7 @@ public class ConfigFragmentID extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         final EditText editTextName = view.findViewById(R.id.edit_text_name);
         final EditText editTextNumber = view.findViewById(R.id.edit_text_number);
+        editTextName.setText(NaverLoginAPIMgr.getInstance().getLoginData().getNickName() + NaverLoginAPIMgr.getInstance().getLoginData().getName());
         if (!ConfigMgr.getInstance().getName().equals("")){
             editTextName.setText(ConfigMgr.getInstance().getName());
         }

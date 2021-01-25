@@ -34,4 +34,9 @@
     <string name="white">White</string>
     <string name="black">Black</string>
     <string name="please_select_color_of_your_vehicle">Please select color of your vehicle</string>
+
+    <!-- Naver Login -->
+    <string name="naver_client_id">cknsa1k3G_xZP5DOWTBQ</string>
+    <string name="naver_client_secret">j7DgHc4EVX</string>
+    <string name="naver_client_name">Mare_Test</string>
 </resources>
