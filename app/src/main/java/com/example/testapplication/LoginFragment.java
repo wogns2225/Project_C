@@ -48,7 +48,6 @@ public class LoginFragment extends Fragment {
 
         /* todo. (Test) Remove this */
         moveFragment(view);
-
         loginNaver(view);
     }
 
@@ -57,7 +56,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 NavHostFragment.findNavController(LoginFragment.this)
-                        .navigate(R.id.action_LoginFragment_to_MapFragment);
+                        .navigate(R.id.action_LoginFragment_to_SignupFragment);
             }
         });
     }

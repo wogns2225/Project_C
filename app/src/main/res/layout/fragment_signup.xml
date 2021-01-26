@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SignupFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimaryDark">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
+            android:layout_height="543dp"
+            android:background="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/mare_signup_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mare_title"
+                android:textSize="30sp"
+                app:layout_constraintBottom_toTopOf="@+id/textView_signup_whatweare"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/textView_signup_whatweare"
+                android:layout_width="270dp"
+                android:layout_height="wrap_content"
+                android:text="What we are"
+                app:layout_constraintBottom_toTopOf="@+id/textView_signup_introduce"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/mare_signup_title" />
+
+            <TextView
+                android:id="@+id/textView_signup_introduce"
+                android:layout_width="270dp"
+                android:layout_height="120dp"
+                android:background="@drawable/rect_textview"
+                android:text="소개글~~~~"
+                app:layout_constraintBottom_toTopOf="@+id/textView_signup_howtouse1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.503"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView_signup_whatweare" />
+
+            <TextView
+                android:id="@+id/textView_signup_howtouse1"
+                android:layout_width="270dp"
+                android:layout_height="wrap_content"
+                android:text="How to use"
+                app:layout_constraintBottom_toTopOf="@+id/textView_signup_howtouse2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView_signup_introduce" />
+
+            <TextView
+                android:id="@+id/textView_signup_howtouse2"
+                android:layout_width="270dp"
+                android:layout_height="120dp"
+                android:background="@drawable/rect_textview"
+                android:text="사용법~~~~~"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView_signup_howtouse1" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="207dp"
+            android:layout_height="48dp"
+            android:text="Create your Account"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>
