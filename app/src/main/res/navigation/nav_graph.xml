@@ -27,6 +27,9 @@
         <action
             android:id="@+id/action_SignupFragment_to_MapFragment"
             app:destination="@id/MapFragment" />
+        <action
+            android:id="@+id/action_SignupFragment_to_LoginFragment"
+            app:destination="@id/LoginFragment" />
     </fragment>
     <fragment
         android:id="@+id/MapFragment"

@@ -1,21 +1,33 @@
 package com.example.testapplication;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.lang.ref.WeakReference;
 
 public class SignupFragment extends Fragment {
     private static String TAG = "SignupFragment";
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        MainActivity.getFragList().add(new WeakReference<Fragment>(this));
+        Log.d(TAG, "[onAttach] add this fragment" + this.toString());
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "[onCreate]");
     }
 
     @Override

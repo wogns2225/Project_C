@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.fragment.NavHostFragment;
@@ -31,7 +32,6 @@ import com.example.testapplication.CommMgr.InterfaceForServerAPI;
 import com.example.testapplication.CommMgr.ProtocolDefine;
 import com.example.testapplication.CommMgr.SocketMgr;
 import com.example.testapplication.DeviceMgr.DeviceAPI;
-import com.example.testapplication.DisplayMgr.onBackPressedListener;
 import com.example.testapplication.FriendMgr.FriendAdapterMgr;
 import com.example.testapplication.MapMgr.MapConfigMgr;
 import com.naver.maps.geometry.LatLng;
@@ -49,9 +49,9 @@ import com.naver.maps.map.util.MarkerIcons;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
+import java.lang.ref.WeakReference;
 
-public class MapFragment extends Fragment implements OnMapReadyCallback, onBackPressedListener {
+public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     public static String TAG = "MapFragment";
     public static boolean mInitialized = false;
@@ -67,6 +67,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
 
     /* MAP UI*/
     private static boolean mIsClickedFollowCamera = false;
+    private static String mIsClickedSharePos = "1";
     public static PopupWindow mMsgPopupWindow = null;
     public static PopupWindow mNodePopupWindow = null;
 
@@ -77,19 +78,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
     public static final MySocketHandler mMySocketHandler = new MySocketHandler();
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        MainActivity.getFragList().clear();
+        MainActivity.getFragList().add(new WeakReference<Fragment>(this));
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_map, container, false);
-    }
-
-    @Override
-    public void onBackPressed() {
-        FragmentManager fragmentManager = Objects.requireNonNull(getActivity()).getSupportFragmentManager();
-        fragmentManager.beginTransaction().remove(MapFragment.this).commit();
-        fragmentManager.popBackStack();
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -170,10 +176,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
             }
         });
 
+        Switch switch_share = view.findViewById(R.id.switch_share_position);
+        switch_share.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mIsClickedSharePos = isChecked?"1":"0";
+                Log.d(TAG, "[onCheckedChanged] isChecked" + isChecked + ", flag :" +mIsClickedSharePos);
+            }
+        });
         view.findViewById(R.id.button_friend).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", 2, "");
+                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", ProtocolDefine.SID_GetPosition, "");
             }
         });
 
@@ -252,7 +266,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
             Log.d(TAG, "[onMapReady] There was loading friend list");
         }
 
-        if(MapConfigMgr.getInstance().getCameraPosition()!=null){
+        if (MapConfigMgr.getInstance().getCameraPosition() != null) {
             Log.d(TAG, "[onMapReady] There was MAP before this fragment");
             MapConfigMgr.getInstance().moveCameraPosition(
                     MapConfigMgr.getInstance().getCameraPosition()
@@ -261,12 +275,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
     }
 
     public static void onLocationChange(LatLng latLng) {
+        Log.d(TAG, "[onLocationChange] switch state follow:" + mIsClickedFollowCamera +", share:"+ mIsClickedSharePos);
         if (mIsClickedFollowCamera) {
-            Log.d(TAG, "[onLocationChange] switch state" + mIsClickedFollowCamera);
             MapConfigMgr.getInstance().moveCameraPosition(MapConfigMgr.getInstance().getCurrentLocation());
         }
+        String isShare = mIsClickedSharePos + ",";
         String currentPosition = String.valueOf(latLng.latitude) + ',' + String.valueOf(latLng.longitude);
-        InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", 1, currentPosition);
+        InterfaceForServerAPI.toSendMessageWithSocket(
+                SocketMgr.getInstance(), mSrcID, "S0", ProtocolDefine.SID_RegisterPosition, isShare + currentPosition);
     }
 
     /**
@@ -279,7 +295,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
 
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
-        View popupView = layoutInflater.inflate(R.layout.node_info, null);
+        View popupView = layoutInflater.inflate(R.layout.popup_node_info, null);
 
         if (mMsgPopupWindow != null) mMsgPopupWindow.dismiss();
         mMsgPopupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -300,14 +316,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
             @Override
             public void onClick(View v) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString) ." + helloButton.getText());
-                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, dstID, 40, (String) helloButton.getText());
+                InterfaceForServerAPI.toSendMessageWithSocket(
+                        SocketMgr.getInstance(), mSrcID, dstID, ProtocolDefine.SID_ToSendMessage, (String) helloButton.getText());
             }
         });
         accidentButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("TAG", "[onMapReady-setInfoWindowAdapter] accidentButton onClick (SendString)" + accidentButton.getText());
-                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, dstID, 40, (String) accidentButton.getText());
+                InterfaceForServerAPI.toSendMessageWithSocket(
+                        SocketMgr.getInstance(), mSrcID, dstID, ProtocolDefine.SID_ToSendMessage, (String) accidentButton.getText());
             }
         });
     }
@@ -323,7 +341,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
 
             /* Popup Window */
             LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View listPopupView = layoutInflater.inflate(R.layout.node_list, null);
+            final View listPopupView = layoutInflater.inflate(R.layout.popup_node_list, null);
 
             mNodePopupWindow = new PopupWindow(listPopupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             mNodePopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
@@ -388,7 +406,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
      * @param latitude
      * @param longitude
      */
-    public static void toAddFriendPosition(String srcID, Double latitude, Double longitude) {
+    public static void addFriendPosition(String srcID, Double latitude, Double longitude) {
         Log.d(TAG, "[toAddFriendPosition] srcID(" + srcID + "), latitude(" + latitude + "), longitude(" + longitude + ")");
         /* add node in map as marker */
 
@@ -399,6 +417,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
         Marker marker = setMarker(new LatLng(latitude, longitude), "Friend", srcID);
         FriendAdapterMgr.getInstance().addFriendList(srcID, marker);
         FriendAdapterMgr.getInstance().notifyDataSetChanged();
+    }
+
+    public static void clearFriendPosition(){
+        FriendAdapterMgr.getInstance().clearAllFriendList();
     }
 
     @Override
@@ -431,11 +453,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, onBackP
                     String[] separated = recv_payload.split(";");
                     if (separated[0].equals("0")) {
                         Log.d(TAG, "[MySocketHandler-handleMessage] Number of friend is 0");
+                        clearFriendPosition();
                     } else {
+                        /* todo. to show only the shared position */
                         for (numOfComponent = 1; numOfComponent < separated.length; numOfComponent++) {
                             Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[numOfComponent] + "]");
                             String[] position = separated[numOfComponent].split(",");
-                            toAddFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
+                            addFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
                         }
 
                     }

@@ -11,12 +11,17 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -26,19 +31,20 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     private static String TAG = "MainActivity";
 
-    static long mLastTimeBackPressed;
-    private List<WeakReference<Fragment>> mFragList = new ArrayList<WeakReference<Fragment>>();
     private Activity mActivity = null;
 
-    public Activity getActivity() {
-        return mActivity;
-    }
+    /* Manage Fragment*/
+    private static List<WeakReference<Fragment>> mFragList = new ArrayList<WeakReference<Fragment>>();
+    static long mLastTimeBackPressed;
 
+    /* Popup Window */
+    public static PopupWindow mPopupWindowExit = null;
 
     @Override
     public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
-        mFragList.add(new WeakReference(fragment));
+        Log.d(TAG, "[onAttachFragment]");
+//        mFragList.add(new WeakReference(fragment));
     }
 
     public List<Fragment> getActiveFragments() {
@@ -56,13 +62,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        Log.d(TAG, "[onBackPressed] All fragment's size : " + mFragList.size());
         for (WeakReference<Fragment> ref : mFragList) {
             Fragment fragment = ref.get();
-//            Toast.makeText(this, "size : " + mFragList.size(), Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "[onBackPressed] Fragment is : " + fragment.toString());
             if (fragment instanceof MapFragment) {
                 /* todo. should be distinguished for each fragments */
-                Toast.makeText(this, "MapFragment", Toast.LENGTH_SHORT).show();
-                ((onBackPressedListener) fragment).onBackPressed();
+                showPopupWindowExit(fragment.getView());
+                return;
+            } else if (fragment instanceof SignupFragment) {
+                NavHostFragment.findNavController(fragment).navigate(R.id.action_SignupFragment_to_LoginFragment);
                 return;
             }
         }
@@ -120,4 +129,32 @@ public class MainActivity extends AppCompatActivity {
         }
         //noinspection SimplifiableIfStatement
     }
+
+    public void showPopupWindowExit(View view) {
+        /* popupWindow */
+        LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = layoutInflater.inflate(R.layout.popup_exit, null);
+
+        if (mPopupWindowExit != null && mPopupWindowExit.isShowing()) {
+            mPopupWindowExit.dismiss();
+        } else {
+            mPopupWindowExit = new PopupWindow(popupView, RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            mPopupWindowExit.setAnimationStyle(android.R.style.Animation_InputMethod);
+            mPopupWindowExit.showAtLocation(view, Gravity.CENTER_VERTICAL, 0, 0);
+            mPopupWindowExit.update(view, 0, 0, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        }
+    }
+
+    public static List<WeakReference<Fragment>> getFragList() {
+        return mFragList;
+    }
+
+    public static void setFragList(List<WeakReference<Fragment>> fragList) {
+        MainActivity.mFragList = fragList;
+    }
+
+    public Activity getActivity() {
+        return mActivity;
+    }
+
 }

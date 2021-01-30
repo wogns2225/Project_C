@@ -81,7 +81,7 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
     public FriendViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Log.v(TAG, "[onCreateViewHolder]");
 
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.node_list_resource, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.resource_node_list, parent, false);
         FriendViewHolder viewHolder = new FriendViewHolder(view);
 
         return viewHolder;
@@ -131,8 +131,15 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
         }
     }
 
-    public void clearFriendList(String srcID, Marker marker) {
+    public void clearAllFriendList() {
+        Log.d(TAG, "[clearFriendList] clear Friend List : " + mListFriend.size());
         /* clear FriendList*/
+        for (Friend friend : mListFriend) {
+            friend.getMarker().setMap(null);
+        }
+        mListFriend.clear();
+        mMapFriend.clear();
+        Log.d(TAG, "[clearFriendList] clear Friend List : " + mListFriend.size());
     }
 
     public boolean isContainFriend(String srcID) {

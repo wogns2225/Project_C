@@ -78,7 +78,7 @@ public class MyPhotoAdapterMgr extends RecyclerView.Adapter<MyPhotoAdapterMgr.My
     public MyPhotoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Log.v(TAG, "[onCreateViewHolder]");
 
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.photo_list_resource, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.resource_photo_list, parent, false);
         MyPhotoViewHolder viewHolder = new MyPhotoViewHolder(view);
 
         return viewHolder;

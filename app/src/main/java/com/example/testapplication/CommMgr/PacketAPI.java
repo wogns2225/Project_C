@@ -8,7 +8,7 @@ import org.json.JSONObject;
 public class PacketAPI {
     final static String TAG = "PacketMgr";
 
-    public static String makeInputToJsonStr(String srcID, String dstID, int typeID, String payload) {
+    public static String makeInputToJsonStr(String srcID, String dstID, String typeID, String payload) {
         JSONObject json = null;
 
         /* ex. {"srcID":"0", "dstID":"1", "typeID":"1", "payload":"..."} */
