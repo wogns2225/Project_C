@@ -71,6 +71,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public static PopupWindow mMsgPopupWindow = null;
     public static PopupWindow mNodePopupWindow = null;
 
+    private String mPreviousNodeID = "";
+    
     /* Server Comm */
     private static String mSrcID = "00";
 
@@ -152,7 +154,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 LatLng cameraPosition = FriendAdapterMgr.getInstance().getListFriend().get(pos).getLatLng();
                 MapConfigMgr.getInstance().moveCameraPosition(cameraPosition);
 
-                toShowMsgPopupWindow(FriendAdapterMgr.getInstance().getListFriend().get(pos).getFriendID());
+                showMsgPopupWindow(FriendAdapterMgr.getInstance().getListFriend().get(pos).getFriendID());
             }
         });
     }
@@ -183,8 +185,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 mIsClickedSharePos = isChecked ? "1" : "0";
                 Log.d(TAG, "[onCheckedChanged] isChecked" + isChecked + ", flag :" + mIsClickedSharePos);
 
-                if(mIsClickedSharePos.equals("0")){
+                if (mIsClickedSharePos.equals("0")) {
                     clearFriendPosition();
+                    dismissMsgPopupWindow();
+                    dismissListPopupWindow();
                 }
 
             }
@@ -192,14 +196,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         view.findViewById(R.id.button_friend).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", ProtocolDefine.SID_GetPosition, "");
+                if (mNodePopupWindow != null && mNodePopupWindow.isShowing()) {
+                    mNodePopupWindow.dismiss();
+                } else {
+                    showListPopupWindow();
+                }
+//                InterfaceForServerAPI.toSendMessageWithSocket(SocketMgr.getInstance(), mSrcID, "S0", ProtocolDefine.SID_GetPosition, "");
             }
         });
 
         view.findViewById(R.id.button_message).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                if (mMsgPopupWindow != null && mMsgPopupWindow.isShowing()) {
+                    mMsgPopupWindow.dismiss();
+                } else {
+                    showMsgPopupWindow(mPreviousNodeID);
+                }
             }
         });
 
@@ -261,8 +274,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 } else {
                     mInfoWindow.close();
                 }
-                toShowMsgPopupWindow(markerTemp.getTag().toString());
-                toShowListPopupWindow();
+                showMsgPopupWindow(markerTemp.getTag().toString());
+                showListPopupWindow();
                 return true;
             }
         };
@@ -295,9 +308,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
      *
      * @param markerID
      */
-    public void toShowMsgPopupWindow(String markerID) {
-        Log.d(TAG, "[toShowMsgPopupWindow] create Node Popup Window");
+    public void showMsgPopupWindow(String markerID) {
+        Log.d(TAG, "[showMsgPopupWindow] create Node Popup Window");
 
+        mPreviousNodeID = markerID;
+        
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
         View popupView = layoutInflater.inflate(R.layout.popup_node_info, null);
@@ -335,14 +350,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
-    public void toShowListPopupWindow() {
+    public void dismissMsgPopupWindow(){
+        if(mMsgPopupWindow != null && mMsgPopupWindow.isShowing())
+            mMsgPopupWindow.dismiss();
+    }
+
+    public void showListPopupWindow() {
         /* popupWindow */
-        if (FriendAdapterMgr.getInstance().getListFriend().size() <= 0) {
-            Log.d(TAG, "[toShowListPopupWindow] mCountOfFriend is lesser then 1");
+        if (FriendAdapterMgr.getInstance().getListFriend().size() < 0) {
+            Log.d(TAG, "[showListPopupWindow] mCountOfFriend is lesser then 1");
         } else if ((mNodePopupWindow != null) && mNodePopupWindow.isShowing()) {
-            Log.d(TAG, "[toShowListPopupWindow] Node list popup is already created");
+            Log.d(TAG, "[showListPopupWindow] Node list popup is already created");
         } else {
-            Log.d(TAG, "[toShowListPopupWindow] create Node Popup Window");
+            Log.d(TAG, "[showListPopupWindow] create Node Popup Window");
 
             /* Popup Window */
             LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -363,6 +383,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), linearLayoutManager.getOrientation());
             mRecyclerView.addItemDecoration(dividerItemDecoration);
         }
+    }
+
+    public void dismissListPopupWindow(){
+        if(mNodePopupWindow != null && mNodePopupWindow.isShowing())
+            mNodePopupWindow.dismiss();
     }
 
     public static Marker setMarker(LatLng latLng, String nodeType, String ID) {
