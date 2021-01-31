@@ -132,6 +132,9 @@ public class FriendAdapterMgr extends RecyclerView.Adapter<FriendAdapterMgr.Frie
     }
 
     public void clearAllFriendList() {
+        if (mListFriend.size() < 1){
+            return;
+        }
         Log.d(TAG, "[clearFriendList] clear Friend List : " + mListFriend.size());
         /* clear FriendList*/
         for (Friend friend : mListFriend) {

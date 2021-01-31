@@ -180,8 +180,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         switch_share.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mIsClickedSharePos = isChecked?"1":"0";
-                Log.d(TAG, "[onCheckedChanged] isChecked" + isChecked + ", flag :" +mIsClickedSharePos);
+                mIsClickedSharePos = isChecked ? "1" : "0";
+                Log.d(TAG, "[onCheckedChanged] isChecked" + isChecked + ", flag :" + mIsClickedSharePos);
+
+                if(mIsClickedSharePos.equals("0")){
+                    clearFriendPosition();
+                }
+
             }
         });
         view.findViewById(R.id.button_friend).setOnClickListener(new View.OnClickListener() {
@@ -275,7 +280,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     public static void onLocationChange(LatLng latLng) {
-        Log.d(TAG, "[onLocationChange] switch state follow:" + mIsClickedFollowCamera +", share:"+ mIsClickedSharePos);
+        Log.d(TAG, "[onLocationChange] switch state follow:" + mIsClickedFollowCamera + ", share:" + mIsClickedSharePos);
         if (mIsClickedFollowCamera) {
             MapConfigMgr.getInstance().moveCameraPosition(MapConfigMgr.getInstance().getCurrentLocation());
         }
@@ -419,7 +424,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         FriendAdapterMgr.getInstance().notifyDataSetChanged();
     }
 
-    public static void clearFriendPosition(){
+    public static void clearFriendPosition() {
         FriendAdapterMgr.getInstance().clearAllFriendList();
     }
 
@@ -427,6 +432,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         Toast.makeText(getContext(), "OptionItemSelected", Toast.LENGTH_SHORT).show();
         return super.onOptionsItemSelected(item);
+    }
+
+    public static void updateFriendPosition(JSONObject json) throws JSONException {
+        int numOfComponent = 0;
+
+        String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
+        String[] separated = recv_payload.split(";");
+        if (separated[0].equals("0")) {
+            Log.d(TAG, "[MySocketHandler-handleMessage] Number of friend is 0");
+            clearFriendPosition();
+        } else {
+            /* todo. to show only the shared position */
+            for (numOfComponent = 1; numOfComponent < separated.length; numOfComponent++) {
+                Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[numOfComponent] + "]");
+                String[] position = separated[numOfComponent].split(",");
+                addFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
+            }
+        }
     }
 
     /**
@@ -437,7 +460,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
         @Override
         public void handleMessage(Message msg) {
-            int numOfComponent = 0;
             JSONObject json = null;
             try {
                 json = new JSONObject(msg.obj.toString());
@@ -448,22 +470,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 Log.d(TAG, "[MySocketHandler-handleMessage] 전달받은 서비스 종류 : (" + typeID + ")");
 
                 /* todo. make a wrapper function to handle each service easily */
-                if (typeID.equals(ProtocolDefine.SID_PutPosition)) {
-                    String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
-                    String[] separated = recv_payload.split(";");
-                    if (separated[0].equals("0")) {
-                        Log.d(TAG, "[MySocketHandler-handleMessage] Number of friend is 0");
-                        clearFriendPosition();
-                    } else {
-                        /* todo. to show only the shared position */
-                        for (numOfComponent = 1; numOfComponent < separated.length; numOfComponent++) {
-                            Log.d(TAG, "[MySocketHandler-handleMessage] Friend position : [" + separated[numOfComponent] + "]");
-                            String[] position = separated[numOfComponent].split(",");
-                            addFriendPosition(position[0], Double.parseDouble(position[1]), Double.parseDouble(position[2]));
-                        }
-
-                    }
-
+                if (typeID.equals(ProtocolDefine.SID_RegisterPosition_Resp)) {
+                    updateFriendPosition(json);
+                } else if (typeID.equals(ProtocolDefine.SID_PutPosition)) {
+                    updateFriendPosition(json);
                 } else if (typeID.equals(ProtocolDefine.SID_PutMessage)) {
                     String recv_payload = json.getString("payload"); // {length;srcID,position;srcID,position;}
                     Log.d(TAG, "[MySocketHandler-handleMessage] Received num of friend msg :. " + recv_payload);
