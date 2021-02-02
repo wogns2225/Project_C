@@ -13,6 +13,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.testapplication.ConfigMgr.ConfigFragmentColor;
 import com.example.testapplication.ConfigMgr.ConfigFragmentFriendList;
 import com.example.testapplication.ConfigMgr.ConfigFragmentID;
+import com.example.testapplication.ConfigMgr.ConfigFragmentMsgBtn;
 import com.example.testapplication.ConfigMgr.ConfigFragmentPhoto;
 
 public class ConfigFragment extends Fragment {
@@ -70,6 +71,13 @@ public class ConfigFragment extends Fragment {
             public void onClick(View v) {
                 getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentColor()).commit();
                 Toast.makeText(getContext(), "Vehicle Color", Toast.LENGTH_SHORT).show();
+            }
+        });
+        view.findViewById(R.id.button_msgbtn_config).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getChildFragmentManager().beginTransaction().add(R.id.fragment_place, new ConfigFragmentMsgBtn()).commit();
+                Toast.makeText(getContext(), "MsgBtn", Toast.LENGTH_SHORT).show();
             }
         });
     }

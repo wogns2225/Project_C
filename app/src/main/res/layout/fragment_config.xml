@@ -102,6 +102,12 @@
                 app:layout_constraintTop_toBottomOf="@+id/button_color" />
 
             <Button
+                android:id="@+id/button_msgbtn_config"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MsgBtn" />
+
+            <Button
                 android:id="@+id/button_second"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

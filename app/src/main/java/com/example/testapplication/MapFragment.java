@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
@@ -32,6 +33,8 @@ import com.example.testapplication.CommMgr.InterfaceForServerAPI;
 import com.example.testapplication.CommMgr.ProtocolDefine;
 import com.example.testapplication.CommMgr.SocketMgr;
 import com.example.testapplication.DeviceMgr.DeviceAPI;
+import com.example.testapplication.DisplayMgr.MsgBtn;
+import com.example.testapplication.DisplayMgr.MsgBtnAdapterMgr;
 import com.example.testapplication.FriendMgr.FriendAdapterMgr;
 import com.example.testapplication.MapMgr.MapConfigMgr;
 import com.naver.maps.geometry.LatLng;
@@ -129,7 +132,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 Log.d(TAG, "[onViewCreated-onAuthFailed] getActivity() is not working. please check the call to get the context ");
             }
 
-            setAdapterHandler(view);
+            setFriendAdapterHandler(view);
+            setMsgBtnAdapterHandler(view);
             setButtonHandler(view);
         }
     }
@@ -147,7 +151,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onStop();
     }
 
-    public void setAdapterHandler(final View view) {
+    public void setFriendAdapterHandler(final View view) {
         FriendAdapterMgr.getInstance().setOnItemClickListener(new FriendAdapterMgr.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int pos) {
@@ -155,6 +159,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 MapConfigMgr.getInstance().moveCameraPosition(cameraPosition);
 
                 showMsgPopupWindow(FriendAdapterMgr.getInstance().getListFriend().get(pos).getFriendID());
+            }
+        });
+    }
+
+    public void setMsgBtnAdapterHandler(final View view){
+        MsgBtnAdapterMgr.getInstance().setOnItemClickListener(new MsgBtnAdapterMgr.OnItemClickListener() {
+            @Override
+            public void onItemClick(View v, int pos) {
+               Toast.makeText(getContext(), "Clicked MsgBtn index : " + pos, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -167,6 +180,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 Log.d(TAG, "[onViewCreated-onClick]");
 //                moveCameraPosition();
                 NavHostFragment.findNavController(MapFragment.this).navigate(R.id.action_MapFragment_to_ConfigFragment);
+                dismissListPopupWindow();
+                dismissMsgPopupWindow();
             }
         });
 
@@ -315,39 +330,42 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         
         /* popupWindow */
         LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
-        View popupView = layoutInflater.inflate(R.layout.popup_node_info, null);
+        View popupView = layoutInflater.inflate(R.layout.popup_node_msg, null);
 
         if (mMsgPopupWindow != null) mMsgPopupWindow.dismiss();
         mMsgPopupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         mMsgPopupWindow.setAnimationStyle(android.R.style.Animation_InputMethod);
         mMsgPopupWindow.showAtLocation(mView, Gravity.CENTER | Gravity.BOTTOM, 0, 0);
-        mMsgPopupWindow.update(mView, 0, 70, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        mMsgPopupWindow.update(mView, 0, 1200, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
         TextView markerTitle = popupView.findViewById(R.id.marker_name);        // set Text View for a selected marker
-        final Button helloButton = popupView.findViewById(R.id.marker_msg_1);           // set Button for "hello" message
-        final Button accidentButton = popupView.findViewById(R.id.marker_msg_2);        // set Button for "accident" message
+        final EditText editTextMsgBtn = popupView.findViewById(R.id.editText_msg);
+        Button editSendMsg = popupView.findViewById(R.id.button_edittext_msg_send);
 
         /* marker Info */
         String makerInfo = "[ To : " + markerID + " ]";
         final String dstID = markerID;
         markerTitle.setText(makerInfo);
 
-        helloButton.setOnClickListener(new View.OnClickListener() {
+        /* Recycler View */
+        RecyclerView mRecyclerView = popupView.findViewById(R.id.id_recycler_msg_list); // findViewById(R.id.recyclerview_main_list);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
+        mRecyclerView.setAdapter(MsgBtnAdapterMgr.getInstance());
+
+        /* Recycler behavior */
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(), linearLayoutManager.getOrientation());
+        mRecyclerView.addItemDecoration(dividerItemDecoration);
+
+        editSendMsg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] helloButton onClick (SendString) ." + helloButton.getText());
+                Log.d("TAG", "[showMsgPopupWindow] editSendMsg onClick (SendString)" + editTextMsgBtn.getText().toString());
                 InterfaceForServerAPI.toSendMessageWithSocket(
-                        SocketMgr.getInstance(), mSrcID, dstID, ProtocolDefine.SID_ToSendMessage, (String) helloButton.getText());
+                        SocketMgr.getInstance(), mSrcID, dstID, ProtocolDefine.SID_ToSendMessage, (String) editTextMsgBtn.getText().toString());
             }
         });
-        accidentButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("TAG", "[onMapReady-setInfoWindowAdapter] accidentButton onClick (SendString)" + accidentButton.getText());
-                InterfaceForServerAPI.toSendMessageWithSocket(
-                        SocketMgr.getInstance(), mSrcID, dstID, ProtocolDefine.SID_ToSendMessage, (String) accidentButton.getText());
-            }
-        });
+
     }
 
     public void dismissMsgPopupWindow(){
