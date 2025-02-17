@@ -1,0 +1,218 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연결선 수정 가능</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #container { width: 600px; height: 400px; border: 2px dashed #aaa; margin: 20px auto; position: relative; }
+        .draggable {
+            width: 80px; height: 50px; background: lightblue; border-radius: 8px;
+            position: absolute; text-align: center; line-height: 50px; cursor: grab;
+        }
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        line { stroke-width: 2; cursor: pointer; }
+        marker { fill: black; }
+    </style>
+</head>
+<body>
+
+<h2>연결선 수정 가능</h2>
+<p>박스를 이동하고, 연결선을 추가한 후 클릭해서 속성을 변경하세요.</p>
+
+<label>제어기 개체 수: 
+    <input type="number" id="numControllers" value="2" min="2" onchange="createControllers()">
+</label>
+<br><br>
+
+<label>선 종류: 
+    <select id="lineType">
+        <option value="solid">실선</option>
+        <option value="dashed">점선</option>
+    </select>
+</label>
+<label>선 색상: 
+    <input type="color" id="lineColor" value="#000000">
+</label>
+<label>화살표 추가:
+    <input type="checkbox" id="arrow">
+</label>
+<label>화살표 방향:
+    <select id="arrowDirection">
+        <option value="normal">정방향</option>
+        <option value="reverse">역방향</option>
+    </select>
+</label>
+<button onclick="addConnection()">연결선 추가</button>
+<button onclick="savePositions()">좌표 저장</button>
+<pre id="output"></pre>
+
+<div id="container">
+    <svg id="svgCanvas">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="strokeWidth">
+                <polygon points="0 0, 10 3.5, 0 7" />
+            </marker>
+        </defs>
+    </svg>
+</div>
+
+<script>
+    let selectedElement = null, offsetX = 0, offsetY = 0;
+    let connections = [];
+    let controllers = [];
+    let selectedController1 = null;
+    let selectedController2 = null;
+
+    // 제어기 개체 수에 맞게 생성
+    function createControllers() {
+        let num = parseInt(document.getElementById("numControllers").value);
+        controllers = [];
+        let container = document.getElementById("container");
+        
+        // 기존 박스 삭제
+        container.querySelectorAll(".draggable").forEach(el => el.remove());
+        
+        // 새로운 박스 추가
+        for (let i = 0; i < num; i++) {
+            let box = document.createElement("div");
+            box.classList.add("draggable");
+            box.id = "box" + (i + 1);
+            box.innerHTML = "ECU" + (i + 1);
+            box.style.top = (50 + i * 100) + "px";
+            box.style.left = (50 + i * 100) + "px";
+            container.appendChild(box);
+            controllers.push(box);
+            makeDraggable(box);
+        }
+    }
+
+    // 드래그 가능하게 만들기
+    function makeDraggable(element) {
+        element.addEventListener("mousedown", (e) => {
+            selectedElement = e.target;
+            offsetX = e.clientX - selectedElement.offsetLeft;
+            offsetY = e.clientY - selectedElement.offsetTop;
+            selectedElement.style.cursor = "grabbing";
+        });
+    }
+
+    // 드래그 움직임 처리
+    document.addEventListener("mousemove", (e) => {
+        if (!selectedElement) return;
+        selectedElement.style.left = (e.clientX - offsetX) + "px";
+        selectedElement.style.top = (e.clientY - offsetY) + "px";
+        updateConnections();
+    });
+
+    // 드래그 끝났을 때 처리
+    document.addEventListener("mouseup", () => {
+        if (selectedElement) selectedElement.style.cursor = "grab";
+        selectedElement = null;
+    });
+
+    // 연결선 추가
+    function addConnection() {
+        if (!selectedController1 || !selectedController2) {
+            alert("연결할 두 제어기를 선택해주세요.");
+            return;
+        }
+
+        let from = selectedController1.id;
+        let to = selectedController2.id;
+        
+        let lineType = document.getElementById("lineType").value;
+        let lineColor = document.getElementById("lineColor").value;
+        let arrow = document.getElementById("arrow").checked;
+        let arrowDirection = document.getElementById("arrowDirection").value;
+
+        let connection = { from, to, lineType, lineColor, arrow, arrowDirection };
+        connections.push(connection);
+        updateConnections();
+
+        // 연결선 추가 후 제어기 선택 초기화
+        selectedController1.style.border = "none";
+        selectedController2.style.border = "none";
+        selectedController1 = null;
+        selectedController2 = null;
+    }
+
+    // 제어기 선택
+    function selectController(controller) {
+        if (selectedController1 && selectedController1 === controller) {
+            // 선택된 제어기 취소
+            selectedController1.style.border = "none";
+            selectedController1 = null;
+        } else if (!selectedController1) {
+            // 첫 번째 제어기 선택
+            selectedController1 = controller;
+            controller.style.border = "2px solid red";
+        } else if (!selectedController2) {
+            // 두 번째 제어기 선택
+            selectedController2 = controller;
+            controller.style.border = "2px solid green";
+        }
+    }
+
+    // 연결선 업데이트
+    function updateConnections() {
+        let svg = document.getElementById("svgCanvas");
+        svg.innerHTML = `<defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="strokeWidth">
+                <polygon points="0 0, 10 3.5, 0 7" />
+            </marker>
+        </defs>`;
+
+        connections.forEach((conn) => {
+            let fromEl = document.getElementById(conn.from);
+            let toEl = document.getElementById(conn.to);
+            let x1 = fromEl.offsetLeft + fromEl.offsetWidth / 2;
+            let y1 = fromEl.offsetTop + fromEl.offsetHeight / 2;
+            let x2 = toEl.offsetLeft + toEl.offsetWidth / 2;
+            let y2 = toEl.offsetTop + toEl.offsetHeight / 2;
+
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("stroke", conn.lineColor);
+            line.setAttribute("stroke-dasharray", conn.lineType === "dashed" ? "5,5" : "0");
+
+            if (conn.arrow) {
+                let direction = conn.arrowDirection === "reverse" ? "auto" : "auto-start-reverse";
+                line.setAttribute("marker-end", "url(#arrowhead)");
+                line.setAttribute("orient", direction);
+            }
+
+            svg.appendChild(line);
+        });
+    }
+
+    // 좌표 저장
+    function savePositions() {
+        let data = [];
+        controllers.forEach(el => {
+            data.push({ id: el.id, x: el.offsetLeft, y: el.offsetTop });
+        });
+        document.getElementById("output").textContent = JSON.stringify({ nodes: data, connections }, null, 2);
+    }
+
+    // 페이지 로드 시 기본 제어기 생성
+    createControllers();
+
+    // 각 제어기에 클릭 이벤트 추가
+    document.getElementById("container").addEventListener("click", (e) => {
+        if (e.target.classList.contains("draggable")) {
+            selectController(e.target);
+        }
+    });
+</script>
+
+</body>
+</html>
